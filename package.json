@@ -1,0 +1,15 @@
+{
+  "name": "tea",
+  "version": "1.0.0",
+  "description": "TA Emergency Availability",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Reece Jackson",
+  "license": "ISC"
+}
