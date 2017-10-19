@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel='stylesheet' href='fullcalendar/fullcalendar.css' />
+	<script src='lib/jquery/dist/jquery.min.js'></script>
+	<script src='lib/moment/min/moment.min.js'></script>
+	<script src='fullcalendar/fullcalendar.js'></script>
+
+	<script>
+		var events = [];
+
+		$(document).ready(function() {
+		    $('#calendar').fullCalendar({
+		    	dayClick: function(date, jsEvent, view) {
+		    		alert('Clicked on: ' + date.format());
+		    		alert('Current view: ' + view.name);
+		    	}
+		    })
+
+		    getSchedule("test1");
+		});
+
+		function refreshCalendar() {
+			$('#calendar').fullCalendar('removeEvents');
+			$('#calendar').fullCalendar('renderEvents', events, true);
+		}
+
+		function getSchedule(userId) {
+			events = [];
+
+			$.ajax({
+				url: window.location.href + "schedule",
+				type: "GET",
+				data: {
+					userId: userId
+				},
+				dataType: 'json',
+				success: function(data) {
+					events = data;
+					refreshCalendar();
+				}
+			});
+		}
+
+		function createScheduleItem(userId, eventTitle, startTime, endTime) {
+			$.ajax({
+				url: window.location.href + "create",
+				type: "post",
+				data: JSON.stringify({
+					userId: userId,
+					title: eventTitle,
+					startTime: startTime,
+					endTime: endTime
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function(data) {
+					events.push(data);
+					refreshCalendar();
+				}
+			});
+		} 
+
+	</script>
+</head>
+<body>
+	<div id='calendar' style='width:75%; height:75%;'></div>
+
+	<button onclick="getSchedule('test1');">test1</button>
+	<button onclick="getSchedule('test2');">test2</button>
+	<button onclick="getSchedule('test3');">test3</button>
+	<button onclick="getSchedule('rjackson@scu.edu');">Reece's Schedule</button>
+	<button onclick="createScheduleItem('rjackson@scu.edu', 'New Event', '2017-10-18T19:00:00', '2017-10-18T23:00:00');">Create Event</button>
+
+	<!--
+	https://eonasdan.github.io/bootstrap-datetimepicker/
+	-->
+</bodY>
+</html>
