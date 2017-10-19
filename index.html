@@ -8,25 +8,26 @@
 
 	<script>
 		var events = [];
+		var globalUserId = "test1"; // Replace this with google identity function
 
 		$(document).ready(function() {
 		    $('#calendar').fullCalendar({
 		    	dayClick: function(date, jsEvent, view) {
 		    		alert('Clicked on: ' + date.format());
-		    		alert('Current view: ' + view.name);
+		    	},
+		    	eventClick: function(calEvent, jsEvent, view) {
+		    		var result = confirm("Do you want to delete " + calEvent.title + "?");
+		    		if(result)
+		    			deleteEvent(calEvent, globalUserId);
 		    	}
 		    })
 
 		    getSchedule("test1");
 		});
 
-		function refreshCalendar() {
-			$('#calendar').fullCalendar('removeEvents');
-			$('#calendar').fullCalendar('renderEvents', events, true);
-		}
-
 		function getSchedule(userId) {
 			events = [];
+			globalUserId = userId
 
 			$.ajax({
 				url: window.location.href + "schedule",
@@ -45,7 +46,7 @@
 		function createScheduleItem(userId, eventTitle, startTime, endTime) {
 			$.ajax({
 				url: window.location.href + "create",
-				type: "post",
+				type: "POST",
 				data: JSON.stringify({
 					userId: userId,
 					title: eventTitle,
@@ -59,9 +60,52 @@
 					refreshCalendar();
 				}
 			});
+		}
+
+		function deleteEvent(calEvent, userId) {
+			$.ajax({
+				url: window.location.href + "delete",
+				type: "DELETE",
+				data: JSON.stringify({
+					id: calEvent["id"],
+					userId: userId
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function(data) {
+					events = data;
+					refreshCalendar();
+				}
+			});
 		} 
 
+		function resetServer() {
+			$.ajax({
+				url: window.location.href + "reset",
+				type: "POST",
+				data: JSON.stringify({
+					userId: globalUserId
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function(data) {
+					events = data;
+					refreshCalendar();
+				}
+			});
+		}
+
+		function refreshCalendar() {
+			$('#calendar').fullCalendar('removeEvents');
+			$('#calendar').fullCalendar('renderEvents', events, true);
+		}
 	</script>
+
+	<style>
+		p {
+			font-family: Arial;
+		}
+	</style>
 </head>
 <body>
 	<div id='calendar' style='width:75%; height:75%;'></div>
@@ -71,6 +115,9 @@
 	<button onclick="getSchedule('test3');">test3</button>
 	<button onclick="getSchedule('rjackson@scu.edu');">Reece's Schedule</button>
 	<button onclick="createScheduleItem('rjackson@scu.edu', 'New Event', '2017-10-18T19:00:00', '2017-10-18T23:00:00');">Create Event</button>
+	<button onclick="resetServer();">Reset Server</button>
+
+	<p>Buttons test1, test2, test3, and Reece's Schedule test loading different schedules into the calendar<br>Create event calls the API to create a new event with preloaded values<br>Click on an event to delete it<br>The reset server button resets the original data</p>
 
 	<!--
 	https://eonasdan.github.io/bootstrap-datetimepicker/

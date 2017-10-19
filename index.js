@@ -16,8 +16,6 @@ app.get('/', function (req, res) {
 app.get('/schedule', function (req, res) {
 	var userId = req.query.userId;
 
-	schedules = makeSampleSchedule();
-
 	res.send(schedules[userId]);
 });
 
@@ -26,15 +24,34 @@ app.get('/available', function (req, res) {
 	var startTime = req.query.startTime;
 	var endTime = req.query.endTime;
 
+	// TODO: Implementation
+
 	res.send("available");
 });
 
-app.post('/create', function (req, res) {
-	console.log(req.body);
-	
+app.post('/create', function (req, res) {	
 	var newEvent = makeSampleEvent(req.body['title'], req.body['startTime'], req.body['endTime']);
 
 	res.send(newEvent);
+});
+
+app.delete('/delete', function(req, res) {
+	var events = schedules[req.body["userId"]];
+
+	events.forEach(function (item) {
+		if (item["id"] == req.body["id"]) {
+			var index = events.indexOf(item);
+			events.splice(index, 1);
+		}
+	});
+
+	res.send(events);
+});
+
+app.post('/reset', function(req, res) {
+	schedules = makeSampleSchedule();
+
+	res.send(schedules[req.body['userId']]);
 });
 
 app.listen(3000, function () {
@@ -80,7 +97,7 @@ function makeSampleEvent(title, startDate, endDate) {
 	var end = moment(endDate + timezone);
 
 	var myEvent = {
-		id: 1,
+		id: '_' + Math.random().toString(36).substr(2, 9), // Make this legit
 		title: title,
 		allDay: false,
 		start: start,
