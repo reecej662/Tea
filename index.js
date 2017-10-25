@@ -13,13 +13,13 @@ app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
 
-app.get('/schedule', function (req, res) {
-	var userId = req.query.userId;
+app.get('/tea/:userId/schedule', function (req, res) {
+	var userId = req.params.userId;
 
 	res.send(schedules[userId]);
 });
 
-app.post('/available', function (req, res) {
+app.post('/tea/available', function (req, res) {
 	var userId = req.body["userId"];
 	var availableUsers = [];
 
@@ -34,7 +34,7 @@ app.post('/available', function (req, res) {
 		availabilityEnd = null;
 
 		schedules[key].forEach(function (event) {	
-			if(event.start.diff(end) < 0 && event.end.diff(start) > 0 || key == userId) {
+			if(event.start.diff(end) < 0 && event.end.diff(start) > 0) {
 				available = false;
 			} else {
 				if((availabilityStart == null || event.end.diff(start) > availabilityStart.diff(start)) && event.end.diff(start) <= 0) {
@@ -67,26 +67,29 @@ app.post('/available', function (req, res) {
 	res.send(availableUsers);
 });
 
-app.post('/create', function (req, res) {	
+app.post('/tea/:userId/addEvent', function (req, res) {	
 	var newEvent = makeSampleEvent(req.body['title'], req.body['start'], req.body['end']);
 
+	schedules[req.params.userId].push(newEvent);
 	res.send(newEvent);
 });
 
-app.delete('/delete', function(req, res) {
-	var events = schedules[req.body["userId"]];
+app.delete('/tea/:userId/deleteEvent/:eventId', function(req, res) {
+	var events = schedules[req.params.userId];
+	var eventId = req.params.eventId
 
 	events.forEach(function (item) {
-		if (item["id"] == req.body["id"]) {
+		if (item["id"] == eventId) {
 			var index = events.indexOf(item);
 			events.splice(index, 1);
 		}
 	});
 
 	res.send(events);
+
 });
 
-app.post('/reset', function(req, res) {
+app.post('/tea/reset', function(req, res) {
 	schedules = makeSampleSchedule();
 
 	res.send(schedules[req.body['userId']]);
