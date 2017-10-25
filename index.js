@@ -19,18 +19,56 @@ app.get('/schedule', function (req, res) {
 	res.send(schedules[userId]);
 });
 
-app.get('/available', function (req, res) {
-	var userId = req.query.userId;
-	var startTime = req.query.startTime;
-	var endTime = req.query.endTime;
+app.post('/available', function (req, res) {
+	var userId = req.body["userId"];
+	var availableUsers = [];
 
-	// TODO: Implementation
+	var start = moment(req.body["start"]);
+	var end = moment(req.body["end"]);
 
-	res.send("available");
+	var availabilityStart, availabilityEnd = null;
+
+	for (var key in schedules) {
+		var available = true;
+		availabilityStart = null;
+		availabilityEnd = null;
+
+		schedules[key].forEach(function (event) {	
+			if(event.start.diff(end) < 0 && event.end.diff(start) > 0 || key == userId) {
+				available = false;
+			} else {
+				if((availabilityStart == null || event.end.diff(start) > availabilityStart.diff(start)) && event.end.diff(start) <= 0) {
+					availabilityStart = event.end;
+				}
+
+				if((availabilityEnd == null || event.start.diff(end) < availabilityEnd.diff(end)) && event.start.diff(end) >= 0) {
+					availabilityEnd = event.start;
+				}
+			}
+		});
+
+		if(availabilityStart == null) {
+			availabilityStart = start;
+		}
+
+		if(availabilityEnd == null) {
+			availabilityEnd = end;
+		}
+
+		if(available) {
+			availableUsers.push({
+				userId: key,
+				availabilityStart: availabilityStart,
+				availabilityEnd: availabilityEnd
+			});
+		}
+	}
+
+	res.send(availableUsers);
 });
 
 app.post('/create', function (req, res) {	
-	var newEvent = makeSampleEvent(req.body['title'], req.body['startTime'], req.body['endTime']);
+	var newEvent = makeSampleEvent(req.body['title'], req.body['start'], req.body['end']);
 
 	res.send(newEvent);
 });
@@ -54,40 +92,49 @@ app.post('/reset', function(req, res) {
 	res.send(schedules[req.body['userId']]);
 });
 
-app.listen(3000, function () {
-  console.log('TEA running on port 3000');
+app.listen(8080, function () {
+  console.log('TEA running on port 8080');
 });
 
 function makeSampleSchedule() {
 	return {
 		"test1":[
-			makeSampleEvent("Test Event", '2017-10-18T19:00:00', '2017-10-18T22:00:00'),
-			makeSampleEvent("Test Event", '2017-10-19T19:00:00', '2017-10-19T22:00:00'),
-			makeSampleEvent("Test Event", '2017-10-20T19:00:00', '2017-10-20T22:00:00'),
-			makeSampleEvent("Test Event", '2017-10-21T19:00:00', '2017-10-21T22:00:00'),
+			makeSampleEvent("Test Event 1", '2017-10-18T19:00:00', '2017-10-18T22:00:00'),
+			makeSampleEvent("Test Event 2", '2017-10-19T19:00:00', '2017-10-19T22:00:00'),
+			makeSampleEvent("Test Event 3", '2017-10-20T19:00:00', '2017-10-20T22:00:00'),
+			makeSampleEvent("Test Event 4", '2017-10-21T19:00:00', '2017-10-21T22:00:00'),
 		],
 		"test2":[
-			makeSampleEvent("Test Event", '2017-10-21T19:00:00', '2017-10-21T22:00:00'),
-			makeSampleEvent("Test Event", '2017-10-22T19:00:00', '2017-10-22T22:00:00'),
-			makeSampleEvent("Test Event", '2017-10-23T19:00:00', '2017-10-23T22:00:00'),
+			makeSampleEvent("Test Event 1", '2017-10-21T19:00:00', '2017-10-21T22:00:00'),
+			makeSampleEvent("Test Event 2", '2017-10-22T19:00:00', '2017-10-22T22:00:00'),
+			makeSampleEvent("Test Event 3", '2017-10-23T19:00:00', '2017-10-23T22:00:00'),
 		],
 		"test3":[
-			makeSampleEvent("Test Event", '2017-10-23T19:00:00', '2017-10-23T22:00:00'),
-			makeSampleEvent("Test Event", '2017-10-24T19:00:00', '2017-10-24T22:00:00'),
+			makeSampleEvent("Test Event 1", '2017-10-23T19:00:00', '2017-10-23T22:00:00'),
+			makeSampleEvent("Test Event 2", '2017-10-24T19:00:00', '2017-10-24T22:00:00'),
 		],
 		"rjackson@scu.edu":[
-			makeSampleEvent('Coen 174', '2017-10-23T16:15:00', '2017-10-23T17:20:00'),
-			makeSampleEvent('Coen 174', '2017-10-25T16:15:00', '2017-10-25T17:20:00'),
+			makeSampleEvent('Coen 174 1', '2017-10-23T16:15:00', '2017-10-23T17:20:00'),
+			makeSampleEvent('Coen 174 2', '2017-10-25T16:15:00', '2017-10-25T17:20:00'),
 			makeSampleEvent('Coen 174L', '2017-10-25T21:15:00', '2017-10-25T24:00:00'),
-			makeSampleEvent('Coen 174', '2017-10-27T16:15:00', '2017-10-27T17:20:00'),
-			makeSampleEvent('Csci 168', '2017-10-23T20:00:00', '2017-10-23T21:05:00'),
-			makeSampleEvent('Csci 168', '2017-10-25T20:00:00', '2017-10-25T21:05:00'),
-			makeSampleEvent('Csci 168', '2017-10-27T20:00:00', '2017-10-27T21:05:00'),
+			makeSampleEvent('Coen 174 3', '2017-10-27T16:15:00', '2017-10-27T17:20:00'),
+			makeSampleEvent('Csci 168 1', '2017-10-23T20:00:00', '2017-10-23T21:05:00'),
+			makeSampleEvent('Csci 168 2', '2017-10-25T20:00:00', '2017-10-25T21:05:00'),
+			makeSampleEvent('Csci 168 3', '2017-10-27T20:00:00', '2017-10-27T21:05:00'),
 			makeSampleEvent('Mgmt 198E', '2017-10-24T02:30:00', '2017-10-24T04:05:00'),
 			makeSampleEvent('Arts 197A', '2017-10-24T09:00:00', '2017-10-24T10:00:00'),
 			makeSampleEvent('Coen 194', '2017-10-27T20:30:00', '2017-10-24T21:35:00')
 		]
 	}
+}
+
+function eventInTime(event, startTime, endTime) {
+	var timezone = getTimezone();
+
+	var start = moment(startTime  + timezone);
+	var end = moment(endTime + timezone);
+
+	return (event.start.diff(end) < 0 && event.end.diff(start) > 0);
 }
 
 function makeSampleEvent(title, startDate, endDate) {

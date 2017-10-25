@@ -4,6 +4,22 @@
 	<link rel='stylesheet' href='fullcalendar/fullcalendar.css' />
 	<script src='lib/jquery/dist/jquery.min.js'></script>
 	<script src='lib/moment/min/moment.min.js'></script>
+	
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>   
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
 	<script src='fullcalendar/fullcalendar.js'></script>
 
 	<script>
@@ -50,8 +66,8 @@
 				data: JSON.stringify({
 					userId: userId,
 					title: eventTitle,
-					startTime: startTime,
-					endTime: endTime
+					start: startTime,
+					end: endTime
 				}),
 				dataType: 'json',
 				contentType: 'application/json',
@@ -99,28 +115,109 @@
 			$('#calendar').fullCalendar('removeEvents');
 			$('#calendar').fullCalendar('renderEvents', events, true);
 		}
+
+		function testGetAvailable() {
+			var format = 'MMM Do YYYY, h:mm a';
+
+			$.ajax({
+				url: window.location.href + "available",
+				type: "POST",
+				data: JSON.stringify({
+					userId: globalUserId,
+					start: '2017-10-23T19:00:00+07:00',
+					end: '2017-10-23T20:00:00+07:00'
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function(data) {
+					var availableString = "";
+					data.forEach(function (item) {
+						var start = $.fullCalendar.moment(item.availabilityStart).utc().format(format);
+						var end = $.fullCalendar.moment(item.availabilityEnd).utc().format(format);
+						availableString += "<br>" + item.userId + " is available from " + start + " to " + end;
+					});
+
+					$("#availabilityResults").html(availableString);
+				}
+			});
+		}
 	</script>
 
 	<style>
 		p {
 			font-family: Arial;
 		}
+
+		#buttons {
+			margin-top: 10px;
+			margin-bottom: 10px;	
+		}
+
+		.container {
+			width: 300px;
+			margin: 0;
+			padding: 0;
+		}
 	</style>
 </head>
 <body>
 	<div id='calendar' style='width:75%; height:75%;'></div>
 
-	<button onclick="getSchedule('test1');">test1</button>
-	<button onclick="getSchedule('test2');">test2</button>
-	<button onclick="getSchedule('test3');">test3</button>
-	<button onclick="getSchedule('rjackson@scu.edu');">Reece's Schedule</button>
-	<button onclick="createScheduleItem('rjackson@scu.edu', 'New Event', '2017-10-18T19:00:00', '2017-10-18T23:00:00');">Create Event</button>
-	<button onclick="resetServer();">Reset Server</button>
+	<div id='buttons'>
+		<button onclick="getSchedule('test1');">test1</button>
+		<button onclick="getSchedule('test2');">test2</button>
+		<button onclick="getSchedule('test3');">test3</button>
+		<button onclick="getSchedule('rjackson@scu.edu');">Reece's Schedule</button>
+		<button onclick="createScheduleItem('rjackson@scu.edu', 'New Event', '2017-10-18T19:00:00', '2017-10-18T23:00:00');">Create Event</button>
+		<button onclick="resetServer();">Reset Server</button>
+		<button onclick="testGetAvailable();">Check availability on October 23 between 12pm and 1 pm</button>
+	</div>
 
 	<p>Buttons test1, test2, test3, and Reece's Schedule test loading different schedules into the calendar<br>Create event calls the API to create a new event with preloaded values<br>Click on an event to delete it<br>The reset server button resets the original data</p>
 
+	<p id="availabilityResults"><p>
+
 	<!--
 	https://eonasdan.github.io/bootstrap-datetimepicker/
+
+	<div class="container">
+	    <div class='col-md-3'>
+	        <div class="form-group">
+	            <div class='input-group date' id='datetimepicker1'>
+	                <input type='text' class="form-control" />
+	                <span class="input-group-addon">
+	                    <span class="glyphicon glyphicon-calendar"></span>
+	                </span>
+	            </div>
+	        </div>
+	    </div>
+	    <div class='col-md-3'>
+	        <div class="form-group">
+	            <div class='input-group date' id='datetimepicker2'>
+	                <input type='text' class="form-control" />
+	                <span class="input-group-addon">
+	                    <span class="glyphicon glyphicon-calendar"></span>
+	                </span>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+	
+
+	<script type="text/javascript">
+	    $(function () {
+	        $('#datetimepicker1').datetimepicker();
+	        $('#datetimepicker2').datetimepicker({
+	            useCurrent: false //Important! See issue #1075
+	        });
+	        $("#datetimepicker1").on("dp.change", function (e) {
+	            $('#datetimepicker2').data("DateTimePicker").minDate(e.date);
+	        });
+	        $("#datetimepicker2").on("dp.change", function (e) {
+	            $('#datetimepicker1').data("DateTimePicker").maxDate(e.date);
+	        });
+	    });
+	</script>
 	-->
 </bodY>
 </html>
