@@ -1,0 +1,22 @@
+{
+	"events": {
+		"eventId": {
+			"id": "string",
+			"title": "string",
+			"allDay": "boolean (optional)",
+			"start":"string",
+			"end":"end",
+			"url":"string (optional)",
+			"renderings":"string",
+			"notes":"string"
+		}
+	},
+	"users": {
+		"userId": {
+			"id":"string",
+			"name":"string",
+			"imageUrl":"string",
+			"email":"string"
+		}
+	}
+}

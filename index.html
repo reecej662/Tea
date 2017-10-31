@@ -22,6 +22,9 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
 	<script src='fullcalendar/fullcalendar.js'></script>
 
+	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<meta name="google-signin-client_id" content="619527313666-fo2k03rjj7e8te5qd1ktvtkk718pr28h.apps.googleusercontent.com">
+
 	<script>
 		var events = [];
 		var globalUserId = "test1"; // Replace this with google identity function
@@ -135,6 +138,45 @@
 				}
 			});
 		}
+
+		function testDatabase() {
+			var testObject = {
+				field1: "value1",
+				field2: "value2",
+				object: {
+					val1: "is this working",
+				}
+			}
+			var lab = {
+				name: "174 Lab",
+				ta: "dick",
+				questions: [
+					{
+						title: "How to make design report",
+						student: "hasdf",
+						likes:7
+					},
+					{
+						title: "How to make database",
+						student: "reece",
+						likes:1000
+					}
+				]
+			}
+
+			//databaseRef.
+
+			$.ajax({
+				url: window.location.href + "tea/testDatabase",
+				type: "POST",
+				data: JSON.stringify(lab),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function(data) {
+					alert(data);
+				}
+			})
+		}
 	</script>
 
 	<style>
@@ -155,6 +197,20 @@
 	</style>
 </head>
 <body>
+	<div class="g-signin2" data-onsuccess="onSignIn"></div>
+
+	<script>
+		function onSignIn(googleUser) {
+		  var profile = googleUser.getBasicProfile();
+		  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+		  console.log('Name: ' + profile.getName());
+		  console.log('Image URL: ' + profile.getImageUrl());
+		  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+		}
+	</script>
+
+	<br>
+
 	<div id='calendar' style='width:75%; height:75%;'></div>
 
 	<div id='buttons'>
@@ -165,6 +221,7 @@
 		<button onclick="addEvent(globalUserId, 'New Event', '2017-10-23T19:00:00', '2017-10-23T23:00:00');">Create Event</button>
 		<button onclick="resetServer();">Reset Server</button>
 		<button onclick="testGetAvailable();">Check availability on October 23 between 12pm and 1 pm</button>
+		<button onclick="testDatabase()";>Test Database</button>
 	</div>
 
 	<p>Buttons test1, test2, test3, and Reece's Schedule test loading different schedules into the calendar<br>Create event calls the API to create a new event with preloaded values<br>Click on an event to delete it<br>The reset server button resets the original data</p>

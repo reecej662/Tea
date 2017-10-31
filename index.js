@@ -3,21 +3,39 @@ const app = express();
 const bodyParser = require('body-parser');
 const path = require('path');
 const moment = require('moment')
+const firebase = require("firebase");
+const database = firebase.database;
 
 var schedules = makeSampleSchedule();
+initializeDatabase();
 
 app.use(express.static('dist'));
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname + '/index.html'));
+	res.sendFile(path.join(__dirname + '/index.html'));
 });
+
+app.get('/tea/allTas', function (req, res) {
+	res.send(schedules);
+})
 
 app.get('/tea/:userId/schedule', function (req, res) {
 	var userId = req.params.userId;
 
 	res.send(schedules[userId]);
 });
+
+app.post('/tea/testDatabase', function (req, res) {
+	var body = req.body;
+	var path = "testRound2";
+
+	saveToDatabase(path, body, function() {
+		console.log('Success');
+	})
+
+	res.send('Worked');
+})
 
 app.post('/tea/available', function (req, res) {
 	var userId = req.body["userId"];
@@ -130,6 +148,27 @@ function makeSampleSchedule() {
 		]
 	}
 }
+
+function initializeDatabase() {
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyDzGLRiNvfd6K61uVmAvh1j3Q40PiOl4vA",
+    authDomain: "taemergencyavailability.firebaseapp.com",
+    databaseURL: "https://taemergencyavailability.firebaseio.com",
+    projectId: "taemergencyavailability",
+    storageBucket: "",
+    messagingSenderId: "619527313666"
+  };
+  firebase.initializeApp(config);
+}
+
+function saveToDatabase(path, object, callback) {
+	var ref = firebase.database().ref(path);
+
+	ref.set(object);
+
+	callback();
+} 
 
 function eventInTime(event, startTime, endTime) {
 	var timezone = getTimezone();
