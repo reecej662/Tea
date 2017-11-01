@@ -32,13 +32,19 @@
 		$(document).ready(function() {
 		    $('#calendar').fullCalendar({
 		    	dayClick: function(date, jsEvent, view) {
-		    		alert('Clicked on: ' + date.format());
+		    		jasonAddEvent(globalUserId, date.format());
 		    	},
 		    	eventClick: function(calEvent, jsEvent, view) {
-		    		var result = confirm("Do you want to delete " + calEvent.title + "?");
-		    		if(result)
+		    		var result = confirm("Do you want to delete " + calEvent.title + "? (Click Cancel to edit event)");
+		    		if (result == true) {
 		    			deleteEvent(calEvent, globalUserId);
-		    	}
+		    		} else {
+		    			editEvent(calEvent, globalUserId);
+		    		}
+				},
+				// eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
+				// 	updateEvent( event, delta );
+				// }
 		    })
 
 		    getSchedule("test1");
@@ -78,6 +84,55 @@
 			});
 		}
 
+		function jasonAddEvent(userId, date) {
+			var eventTitle = prompt("Please enter your event title: ");
+			var start = prompt("Please enter your start time in military HH:MM format: ");
+			var end = prompt("Please enter your end time in military HH:MM format: ");
+			var startTime = moment(date+'T'+start+'+00:00');
+			var endTime = moment(date+'T'+end+'+00:00');
+
+			$.ajax({
+				url: window.location.href + "tea/" + userId + "/jasonAddEvent",
+				type: "POST",
+				data: JSON.stringify({
+					title: eventTitle,
+					start: startTime,
+					end: endTime,
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function(data) {
+					events.push(data);
+					refreshCalendar();
+				}
+			});
+		}
+
+		function editEvent(calEvent, userId) {
+			var eventTitle = prompt("Please enter your new event title: ");
+			var start = prompt("Please enter your new start time in military HH:MM format: ");
+			var end = prompt("Please enter your new end time in military HH:MM format: ");
+			var date = $.fullCalendar.moment(calEvent.start).format("YYYY-MM-DD")
+			var startTime = moment(date+'T'+start+'+00:00');
+			var endTime = moment(date+'T'+end+'+00:00');
+
+			$.ajax({
+				url: window.location.href + "tea/" + userId + "/editEvent/" + calEvent["id"],
+				type: "POST",
+				data: JSON.stringify({
+					title: eventTitle,
+					start: startTime,
+					end: endTime,
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function(data) {
+					events = data;
+					refreshCalendar();
+				}
+			});
+		}
+
 		function deleteEvent(calEvent, userId) {
 			$.ajax({
 				url: window.location.href + "tea/" + userId + "/deleteEvent/" + calEvent["id"],
@@ -91,6 +146,15 @@
 				}
 			});
 		} 
+
+		// function updateEvent( calEvent, delta ) {
+		// 	var daysMoved = $.fullCalendar.moment.duration().get('hours');
+		// 	var startDate = $.fullCalendar.moment.utc(calEvent.start).format();
+		// 	var endDate = $.fullCalendar.moment.utc(calEvent.end).format();
+		// 	$('#calendar').fullCalendar('updateEvent', calEvent);
+		// 	events.push(calEvent);
+		// 	refreshCalendar();
+		// }
 
 		function resetServer() {
 			$.ajax({
@@ -224,7 +288,7 @@
 		<button onclick="testDatabase()";>Test Database</button>
 	</div>
 
-	<p>Buttons test1, test2, test3, and Reece's Schedule test loading different schedules into the calendar<br>Create event calls the API to create a new event with preloaded values<br>Click on an event to delete it<br>The reset server button resets the original data</p>
+	<p>Buttons test1, test2, test3, and Reece's Schedule test loading different schedules into the calendar<br>Create event calls the API to create a new event with preloaded values<br>Click on an event to delete/edit it<br>The reset server button resets the original data<br>Click anywhere on the calendar to add an event</p>
 
 	<p id="availabilityResults"><p>
 

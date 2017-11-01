@@ -92,6 +92,28 @@ app.post('/tea/:userId/addEvent', function (req, res) {
 	res.send(newEvent);
 });
 
+app.post('/tea/:userId/jasonAddEvent', function (req, res) {	
+	var newEvent = makeEvent(req.body['title'], req.body['start'], req.body['end']);
+
+	schedules[req.params.userId].push(newEvent);
+	res.send(newEvent);
+});
+
+app.post('/tea/:userId/editEvent/:eventId', function(req, res) {
+	var events = schedules[req.params.userId];
+	var eventId = req.params.eventId;
+
+	events.forEach(function (item) {
+		if (item["id"] == eventId) {
+			item.title = req.body['title'];
+			item.start = req.body['start'];
+			item.end = req.body['end'];
+		}
+	});
+
+	res.send(events);
+});
+
 app.delete('/tea/:userId/deleteEvent/:eventId', function(req, res) {
 	var events = schedules[req.params.userId];
 	var eventId = req.params.eventId
@@ -193,6 +215,22 @@ function makeSampleEvent(title, startDate, endDate) {
 		end: end,
 		url: "",
 		rendering: "",
+		editable: true
+	};
+
+	return myEvent;
+}
+
+function makeEvent(title, startDate, endDate) {
+	var myEvent = {
+		id: '_' + Math.random().toString(36).substr(2, 9), // Make this legit
+		title: title,
+		allDay: false,
+		start: startDate,
+		end: endDate,
+		url: "",
+		rendering: "",
+		editable: true
 	};
 
 	return myEvent;
