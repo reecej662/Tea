@@ -17,7 +17,8 @@ $db = $database->getConnection();
 $user = new User($db);
  
 // set ID property of event to be edited
-$user->id = isset($_GET['id']) ? $_GET['id'] : die();
+//$user->id = isset($_GET['id']) ? $_GET['id'] : die();
+$user->username = isset($_GET['username']) ? $_GET['id'] : die();
  
 // read the details of event to be edited
 $user->readOne();
