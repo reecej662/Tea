@@ -1,11 +1,16 @@
+<?php
+	session_start();
+	if(isset($_SESSION['username'])) {
+  		echo "Your session is running " . $_SESSION['username'];
+	}
+?>
 <!DOCTYPE html>
 <html>
 <head>
 	<link rel='stylesheet' href='dist/fullcalendar/fullcalendar.css' />
 	<script src='dist/lib/jquery/dist/jquery.min.js'></script>
 	<script src='dist/lib/moment/min/moment.min.js'></script>
-	
-	<script src="api/api.js"></script>
+	<script src='api/api.js'></script>
 
 	<!-- Latest compiled and minified CSS -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -23,16 +28,50 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
 	<script src='dist/fullcalendar/fullcalendar.js'></script>
 
-	<script src="https://apis.google.com/js/platform.js" async defer></script>
+	<script src="https://apis.google.com/js/platform.js"></script>
 	<meta name="google-signin-client_id" content="619527313666-fo2k03rjj7e8te5qd1ktvtkk718pr28h.apps.googleusercontent.com">
 
 	<script>
 		var events = [];
-		var globalUserId = 1; // Replace this with google identity function
+		var auth2;
+		var globalUserId = 1;
+
+		function initClient(callback) {
+		    /*gapi.load('auth2', function(){
+		        /**
+		         * Retrieve the singleton for the GoogleAuth library and set up the
+		         * client.
+		         */
+		        /*auth2 = gapi.auth2.init({
+		            client_id: '619527313666-fo2k03rjj7e8te5qd1ktvtkk718pr28h.apps.googleusercontent.com'
+		        });
+
+		        // Attach the click handler to the sign-in button
+		        //auth2.attachClickHandler('signin-button', {}, onSuccess, onFailure);
+		        callback();
+		    });*/
+
+		    getSchedule("1");
+		};
 
 		$(document).ready(function() {
-			toggleVisibility('addForm');
+/*		    $('#calendar').fullCalendar({
+		    	dayClick: function(date, jsEvent, view) {
+		    		jasonAddEvent(globalUserId, date.format());
+		    	},
+		    	eventClick: function(calEvent, jsEvent, view) {
+		    		var result = confirm("Do you want to delete " + calEvent.title + "? (Click Cancel to edit event)");
+		    		if (result == true) {
+		    			deleteEvent(calEvent, globalUserId);
+		    		} else {
+		    			editEvent(calEvent, globalUserId);
+		    		}
+				},
+    })*/
+
+		    toggleVisibility('addForm');
 			toggleVisibility('editForm');
+
 		    $('#calendar').fullCalendar({
 		    	dayClick: function(date, jsEvent, view) {
 					toggleVisibility('addForm');
@@ -57,14 +96,61 @@
 						deleteEvent(calEvent, globalUserId);
 					};
 				},
-				
-				eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
+				// eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
 				// 	updateEvent(event,globalUserId,delta);
-				}
+				// }
 		    })
 
-		    getSchedule("1");
+			/*initClient(function() {
+				if (auth2.isSignedIn.get()) {
+					var profile = auth2.currentUser.get().getBasicProfile();
+					console.log('ID: ' + profile.getId());
+					console.log('Full Name: ' + profile.getName());
+					console.log('Given Name: ' + profile.getGivenName());
+					console.log('Family Name: ' + profile.getFamilyName());
+					console.log('Image URL: ' + profile.getImageUrl());
+					console.log('Email: ' + profile.getEmail());
+				} else {
+					console.log("User not signed in");
+					//window.location = "http://localhost:8080/login.html";
+				}
+			});*/
+
+			getEvents(1, function (data) {
+				events = data["events"];
+
+				$('#calendar').fullCalendar('removeEvents');
+				$('#calendar').fullCalendar('renderEvents', events, true);
+			})
 		});
+
+		function refreshCalendar() {
+			getEvents(1, function (data) {
+				console.log("Getting here");
+				events = data["events"];
+
+				$('#calendar').fullCalendar('removeEvents');
+				$('#calendar').fullCalendar('renderEvents', events, true);
+			});
+		}
+
+		function makeEvents(events) { 
+			var eventArray = [];
+
+			for(index in events) { 
+
+				eventArray.push({
+					eventId: events[index]["eventId"],
+					userId: events[index]["userId"],
+					title: events[index]["title"],
+					start: moment(events[index]["start"]).format(),
+					end: moment(events[index]["end"]).format()
+				})
+			}
+
+			console.log(eventArray);
+			return eventArray;
+		}
 
 		function getSchedule(userId) {
 			events = [];
@@ -72,7 +158,6 @@
 
 			getEvents(userId, function(data) {
 				events = data;
-				refreshCalendar();
 			});
 		}
 
@@ -84,32 +169,36 @@
 			};
 
 			createEvent(event, function(data) {
-				events.push(data);
 				refreshCalendar();
 			});
 		}
 
 		function toggleVisibility(form) {
-		    /*var x = document.getElementById(form);
+		    var x = document.getElementById(form);
 			
 			if (x.style.display === "none") {
        			x.style.display = "block";
     		} else {
         		x.style.display = "none";
    			}		
-   			*/
-   			on()
 		} 
 
 		function jasonAddEvent(userId, date) {
 			var eventTitle = document.getElementById("addTitle").value;
 			var start = convertToMilitary( document.getElementById("addStart").value ); // HH:MM AM/PM format
 			var end = convertToMilitary( document.getElementById("addEnd").value );
-			var startTime = moment(date+'T'+start+'+00:00');
-			var endTime = moment(date+'T'+end+'+00:00');
+			var startTime = moment(date+'T'+start+'-08:00').format("YYYY-MM-DD HH:mm:ss");
+			var endTime = moment(date+'T'+end+'-08:00').format("YYYY-MM-DD HH:mm:ss");
+
+			var event = {
+				userId: 1,
+				eventId: 105,
+				title: eventTitle,
+				start: startTime,
+				end: endTime
+			}
 
 			createEvent(event, function(data) {
-				events.push(data);
 				refreshCalendar();
 			});
 		}
@@ -119,17 +208,19 @@
 			var start = convertToMilitary( document.getElementById("editStart").value ); // HH:MM AM/PM format
 			var end = convertToMilitary( document.getElementById("editEnd").value );
 			var date = $.fullCalendar.moment(calEvent.start).format("YYYY-MM-DD")
-			var startTime = moment(date+'T'+start+'+00:00');
-			var endTime = moment(date+'T'+end+'+00:00');
+			var startTime = moment(date+'T'+start+'+00:00').format("YYYY-MM-DD HH:mm:ss");
+			var endTime = moment(date+'T'+end+'+00:00').format("YYYY-MM-DD HH:mm:ss");
 
 			var event = {
+				id: calEvent["id"],
+				userId: 1,
+				eventId: 105,
 				title: eventTitle,
 				start: startTime,
 				end: endTime,	
 			}
 
 			updateEvent(event, function(data) {
-				events = data;
 				refreshCalendar();
 			})
 		}
@@ -157,8 +248,11 @@
 		// }
 
 		function deleteEvent(calEvent, userId) {
-			deleteEvent(calEvent["id"], function (data) {
-				events = data;
+			console.log(calEvent);
+
+			var id = calEvent["id"];
+
+			deleteEventBackend(id, function (data) {
 				refreshCalendar();
 			})
 		} 
@@ -178,11 +272,6 @@
 		// 		}
 		// 	});
 		// }
-
-		function refreshCalendar() {
-			$('#calendar').fullCalendar('removeEvents');
-			$('#calendar').fullCalendar('renderEvents', events, true);
-		}
 
 		function testGetAvailable() {
 			var format = 'MMM Do YYYY, h:mm a';
@@ -303,6 +392,7 @@
 			$('#test3').html(test3);
 			$('#test4').html(test4);
 		}
+
 	</script>
 
 	<style>
@@ -310,227 +400,155 @@
 			font-family: Arial;
 		}
 
-		#buttons {
-			margin-top: 10px;
-			margin-bottom: 10px;	
-		}
-
-		.container {
-			width: 300px;
-			margin: 0;
-			padding: 0;
+		body { 
+			padding: 50px;
 		}
 	</style>
 </head>
 <body>
-	<div class="g-signin2" data-onsuccess="onSignIn"></div>
+	<a href="login.html">Logout</a>
+	<div id='calendar' style='width:50%; height:50%;'></div>
 
-	<script>
-		function onSignIn(googleUser) {
-		  var profile = googleUser.getBasicProfile();
-		  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-		  console.log('Name: ' + profile.getName());
-		  console.log('Image URL: ' + profile.getImageUrl());
-		  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-		}
-	</script>
+	<!-- Event create stuff -->
 
-	<br>
+	<div id='addForm'>
+		<p>Please enter your event title:<br></p>
+		<input type="text" name="addTitle" id="addTitle"><br>
 
-	<div id='calendar' style='width:75%; height:75%;'></div>
+		<p>Please enter a start time:<br></p>
+		<div class="container">
+	    <div class="row">
+	        <div class='col-sm-6'>
+	            <div class="form-group">
+	                <div class='input-group date' id='datetimepicker1'>
+	                    <input type='text' class="form-control" id='addStart'/>
+	                    <span class="input-group-addon">
+	                        <span class="glyphicon glyphicon-time"></span>
+	                    </span>
+	                </div>
+	            </div>
+	        </div>
+	        <script type="text/javascript">
+	            $(function () {
+	                $('#datetimepicker1').datetimepicker({
+	                    format: 'LT'
+	                });
+	            });
+	        </script>
+	    </div>
+	</div>
 
-	<div id='buttons'>
-		<button onclick="getSchedule('test1');">test1</button>
-		<button onclick="getSchedule('test2');">test2</button>
-		<button onclick="getSchedule('test3');">test3</button>
-		<button onclick="getSchedule('rjackson@scu.edu');">Reece's Schedule</button>
-		<button onclick="addEvent(globalUserId, 'New Event', '2017-10-23T19:00:00', '2017-10-23T23:00:00');">Create Event</button>
-		<button onclick="resetServer();">Reset Server</button>
-		<button onclick="testGetAvailable();">Check availability on October 23 between 12pm and 1 pm</button>
-		<button onclick="testDatabase()";>Test Database</button>
-		<button onclick="hidedp();">Hide dp</button>
-		<button onclick="testConvertToMilitary()";>Test converToMilitary</button>
+		<p>Please enter an end time:<br></p>
+
+		<div class="container">
+	    <div class="row">
+	        <div class='col-sm-6'>
+	            <div class="form-group">
+	                <div class='input-group date' id='datetimepicker2'>
+	                    <input type='text' class="form-control" id='addEnd'/>
+	                    <span class="input-group-addon">
+	                        <span class="glyphicon glyphicon-time"></span>
+	                    </span>
+	                </div>
+	            </div>
+	        </div>
+	        <script type="text/javascript">
+	            $(function () {
+	                $('#datetimepicker2').datetimepicker({
+	                    format: 'LT'
+	                });
+	            });
+	        </script>
+	    </div>
+	</div>
+
+		<div>
+		<button id='cancel' onclick="toggleVisibility('addForm')">Cancel</button>
+		<button id='addEventButton'>Submit</button>
+		</div>
 
 	</div>
 
-	<p>Buttons test1, test2, test3, and Reece's Schedule test loading different schedules into the calendar<br>Create event calls the API to create a new event with preloaded values<br>Click on an event to delete/edit it<br>The reset server button resets the original data<br>Click anywhere on the calendar to add an event</p>
+	<div id='editForm'>
+		<p>Please enter your new event title:<br></p>
+		<input type="text" name="editTitle" id="editTitle"><br>
 
-	<p id="availabilityResults"></p>
-	<p id="test1"></p>
-	<p id="test2"></p>
-	<p id="test3"></p>
-	<p id="test4"></p>
-	<p id='test5'></p>
-
-	<!-- https://eonasdan.github.io/bootstrap-datetimepicker/ -->
-<div id="overlay">
-<div id='addForm'>
-	<p>Please enter your event title:<br></p>
-	<input type="text" name="addTitle" id="addTitle"><br>
-
-	<p>Please enter a start time:<br></p>
-	<div class="container">
-    <div class="row">
-        <div class='col-sm-6'>
-            <div class="form-group">
-                <div class='input-group date' id='datetimepicker1'>
-                    <input type='text' class="form-control" id='addStart'/>
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-time"></span>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <script type="text/javascript">
-            $(function () {
-                $('#datetimepicker1').datetimepicker({
-                    format: 'LT'
-                });
-            });
-        </script>
-    </div>
-</div>
-
-	<p>Please enter an end time:<br></p>
-
-	<div class="container">
-    <div class="row">
-        <div class='col-sm-6'>
-            <div class="form-group">
-                <div class='input-group date' id='datetimepicker2'>
-                    <input type='text' class="form-control" id='addEnd'/>
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-time"></span>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <script type="text/javascript">
-            $(function () {
-                $('#datetimepicker2').datetimepicker({
-                    format: 'LT'
-                });
-            });
-        </script>
-    </div>
-</div>
-
-	<div>
-	<button id='cancel' onclick="toggleVisibility('addForm')">Cancel</button>
-	<button id='addEventButton'>Submit</button>
+		<p>Please enter a new start time:<br></p>
+		<div class="container">
+	    <div class="row">
+	        <div class='col-sm-6'>
+	            <div class="form-group">
+	                <div class='input-group date' id='datetimepicker3'>
+	                    <input type='text' class="form-control" id='editStart'/>
+	                    <span class="input-group-addon">
+	                        <span class="glyphicon glyphicon-time"></span>
+	                    </span>
+	                </div>
+	            </div>
+	        </div>
+	        <script type="text/javascript">
+	            $(function () {
+	                $('#datetimepicker3').datetimepicker({
+	                    format: 'LT'
+	                });
+	            });
+	        </script>
+	    </div>
 	</div>
 
-</div>
+		<p>Please enter a new end time:<br></p>
 
-<div id='editForm'>
-	<p>Please enter your new event title:<br></p>
-	<input type="text" name="editTitle" id="editTitle"><br>
-
-	<p>Please enter a new start time:<br></p>
-	<div class="container">
-    <div class="row">
-        <div class='col-sm-6'>
-            <div class="form-group">
-                <div class='input-group date' id='datetimepicker3'>
-                    <input type='text' class="form-control" id='editStart'/>
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-time"></span>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <script type="text/javascript">
-            $(function () {
-                $('#datetimepicker3').datetimepicker({
-                    format: 'LT'
-                });
-            });
-        </script>
-    </div>
-</div>
-
-	<p>Please enter a new end time:<br></p>
-
-	<div class="container">
-    <div class="row">
-        <div class='col-sm-6'>
-            <div class="form-group">
-                <div class='input-group date' id='datetimepicker4'>
-                    <input type='text' class="form-control" id='editEnd'/>
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-time"></span>
-                    </span>
-                </div>
-            </div>
-        </div>
-        <script type="text/javascript">
-            $(function () {
-                $('#datetimepicker4').datetimepicker({
-                    format: 'LT'
-                });
-            });
-        </script>
-    </div>
-</div>
-
-	<div>
-	<button id='cancel' onclick="toggleVisibility('editForm')">Cancel</button>
-	<!-- <button id='delete'>Delete Event</button> -->
-	<button id='editEventButton'">Submit</button>
+		<div class="container">
+	    <div class="row">
+	        <div class='col-sm-6'>
+	            <div class="form-group">
+	                <div class='input-group date' id='datetimepicker4'>
+	                    <input type='text' class="form-control" id='editEnd'/>
+	                    <span class="input-group-addon">
+	                        <span class="glyphicon glyphicon-time"></span>
+	                    </span>
+	                </div>
+	            </div>
+	        </div>
+	        <script type="text/javascript">
+	            $(function () {
+	                $('#datetimepicker4').datetimepicker({
+	                    format: 'LT'
+	                });
+	            });
+	        </script>
+	    </div>
 	</div>
 
-</div>
-</div>
+		<div>
+		<button id='cancel' onclick="toggleVisibility('editForm')">Cancel</button>
+		<!-- <button id='delete'>Delete Event</button> -->
+		<button id='editEventButton'">Submit</button>
+		</div>
 
-<style>
-#overlay {
-    position: fixed;
-    display: none;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 2;
-    cursor: pointer;
-    color: #ffffff;
-}
-</style>
+	</div>
 
-<script>
-function on() {
-    document.getElementById("overlay").style.display = "block";
-}
+	<!-- https://www.w3schools.com/bootstrap/bootstrap_modal.asp -->
+	<!-- Modal -->
+	<div id="myModal" class="modal fade" role="dialog">
+	  <div class="modal-dialog">
 
-function off() {
-    document.getElementById("overlay").style.display = "none";
-}
-</script>
+	    <!-- Modal content-->
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal">&times;</button>
+	        <h4 class="modal-title">Event Information</h4>
+	      </div>
+	      <div class="modal-body">
+	      	<p id='message'></p>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal" id='delete'>Delete Event</button>
+			<button type="button" class="btn btn-default" data-dismiss="modal" id='edit' onclick="toggleVisibility('editForm')">Edit Event</button>
+	      </div>
+	    </div>
 
-<!-- https://www.w3schools.com/bootstrap/bootstrap_modal.asp -->
-<!-- Modal -->
-<div id="myModal" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-
-    <!-- Modal content-->
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Event Information</h4>
-      </div>
-      <div class="modal-body">
-      	<p id='message'></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal" id='delete'>Delete Event</button>
-		<button type="button" class="btn btn-default" data-dismiss="modal" id='edit' onclick="toggleVisibility('editForm')">Edit Event</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
+	  </div>
+	</div>
 </bodY>
 </html>

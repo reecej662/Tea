@@ -1,5 +1,8 @@
 <?php
-session_start();
+	session_start();
+	if(isset($_SESSION['username'])) {
+  		echo "Your session is running " . $_SESSION['username'];
+	}
 ?>
 <!DOCTYPE html>
 <html>
@@ -62,7 +65,24 @@ session_start();
 				dataType: 'json',
 				contentType: 'application/json',
 				success: function(data) {
-					completion(data);
+					var email = data["email"];
+					var username = email.substring(0, email.indexOf("@"));
+					console.log(username);
+
+					getUser(username, function(data) {
+						console.log(data);
+						$.ajax({
+							url: "http://104.131.9.190/api/session.php",
+							type: "POST",
+							data: JSON.stringify(data),
+							dataType: 'json',
+							contentType: 'application/json',
+							success: function(data) {
+								//completion(data);
+								console.log(data);
+							}
+						});
+					})
 				}
 			});
 		}
@@ -75,7 +95,7 @@ session_start();
 			});
 		}
 	</script>
-
+	
 	<p id="output"><p>
 	<script>
 		/*console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.

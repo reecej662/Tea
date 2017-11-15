@@ -1,5 +1,5 @@
 // Event API functions
-function createEvent(event, completion) {
+function createEvent(event, completion) {	
 	$.ajax({
 		url: "http://104.131.9.190/api/event/create.php",
 		type: 'POST',
@@ -38,7 +38,7 @@ function updateEvent(event, completion) {
 	});		
 }
 
-function deleteEvent(id, completion) {
+function deleteEventBackend(id, completion) {
 	$.ajax({
 		url: "http://104.131.9.190/api/event/delete.php",
 		type: "DELETE",
@@ -136,6 +136,25 @@ function makeSampleEvent(title, userId, startDate, endDate) {
 	};
 
 	return myEvent;
+}
+
+function available(start, end, completion) {
+	// ajax some stuff to get the data from the backend
+	// Response format will be
+	//
+	var phpResponse = {
+		users: [rjackson, example]
+	}
+
+	var users = [];
+
+	for(username in phpResponse) {
+		getUser(username, function(data) {
+			users.push(data["user"]);
+		})
+	}
+
+	completion(users);
 }
 
 function makeSampleEvents() {

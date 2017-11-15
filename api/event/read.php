@@ -49,7 +49,7 @@ if($num>0){
             "end" => $end
         );
  
-        array_push($events_arr["records"], $event_item);
+        array_push($events_arr["events"], $event_item);
     }
  
     echo json_encode($events_arr);
