@@ -49,24 +49,11 @@
 		};
 
 		$(document).ready(function() {
-/*		    $('#calendar').fullCalendar({
-		    	dayClick: function(date, jsEvent, view) {
-		    		jasonAddEvent(globalUserId, date.format());
-		    	},
-		    	eventClick: function(calEvent, jsEvent, view) {
-		    		var result = confirm("Do you want to delete " + calEvent.title + "? (Click Cancel to edit event)");
-		    		if (result == true) {
-		    			deleteEvent(calEvent, globalUserId);
-		    		} else {
-		    			editEvent(calEvent, globalUserId);
-		    		}
-				},
-    })*/
-
 		    toggleVisibility('addForm');
 			toggleVisibility('editForm');
 
 		    $('#calendar').fullCalendar({
+		    	editable: true,
 		    	dayClick: function(date, jsEvent, view) {
 					toggleVisibility('addForm');
 					document.getElementById('addEventButton').onclick = function() {
@@ -86,13 +73,13 @@
 						editEvent(calEvent, globalUserId);
 					};
 					document.getElementById('delete').onclick = function() {
-						// toggleVisibility('editForm');
 						deleteEvent(calEvent, globalUserId);
 					};
 				},
-				// eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
-				// 	updateEvent(event,globalUserId,delta);
-				// }
+
+				eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
+					changeEvent(event,globalUserId);
+				}
 		    })
 
 			/*initClient(function() {
@@ -120,7 +107,6 @@
 
 		function refreshCalendar() {
 			getEvents(1, function (data) {
-				console.log("Getting here");
 				events = data["events"];
 
 				$('#calendar').fullCalendar('removeEvents');
@@ -138,7 +124,8 @@
 					userId: events[index]["userId"],
 					title: events[index]["title"],
 					start: moment(events[index]["start"]).format(),
-					end: moment(events[index]["end"]).format()
+					end: moment(events[index]["end"]).format(),
+					editable: true
 				})
 			}
 
@@ -159,7 +146,8 @@
 			var event = {
 				title: eventTitle,
 				start: startTime,
-				end: endTime
+				end: endTime,
+				editable: true
 			};
 
 			createEvent(event, function(data) {
@@ -189,8 +177,10 @@
 				eventId: 105,
 				title: eventTitle,
 				start: startTime,
-				end: endTime
+				end: endTime,
+				editable: true
 			}
+
 
 			createEvent(event, function(data) {
 				refreshCalendar();
@@ -202,8 +192,10 @@
 			var start = convertToMilitary( document.getElementById("editStart").value ); // HH:MM AM/PM format
 			var end = convertToMilitary( document.getElementById("editEnd").value );
 			var date = $.fullCalendar.moment(calEvent.start).format("YYYY-MM-DD")
-			var startTime = moment(date+'T'+start+'+00:00').format("YYYY-MM-DD HH:mm:ss");
-			var endTime = moment(date+'T'+end+'+00:00').format("YYYY-MM-DD HH:mm:ss");
+			var startTime = moment(date+'T'+start+'-08:00').format("YYYY-MM-DD HH:mm:ss");
+			var endTime = moment(date+'T'+end+'-08:00').format("YYYY-MM-DD HH:mm:ss");
+			// console.log(startTime);
+			// console.log(endTime);
 
 			var event = {
 				id: calEvent["id"],
@@ -212,6 +204,7 @@
 				title: eventTitle,
 				start: startTime,
 				end: endTime,	
+				editable: true
 			}
 
 			updateEvent(event, function(data) {
@@ -219,37 +212,52 @@
 			})
 		}
 
-		// function updateEvent(calEvent, userId) {
-		// 	var date = $.fullCalendar.moment(calEvent.start).format("YYYY-MM-DD")
-		// 	var startTime = moment(date+'T'+start+'+00:00');
-		// 	var endTime = moment(date+'T'+end+'+00:00');
+		function changeEvent(calEvent, userId) {
+			var eventStart = $.fullCalendar.moment(calEvent.start).format('YYYY-MM-DD HH:mm:ss');
+			var eventEnd = $.fullCalendar.moment(calEvent.end).format('YYYY-MM-DD HH:mm:ss');
+			// console.log(eventStart);
+			// console.log(eventEnd);
 
-		// 	$.ajax({
-		// 		url: window.location.href + "tea/" + userId + "/updateEvent/" + calEvent["id"],
-		// 		type: "POST",
-		// 		data: JSON.stringify({
-		// 			start: startTime,
-		// 			end: endTime,
-		// 		}),
-		// 		dataType: 'json',
-		// 		contentType: 'application/json',
-		// 		success: function(data) {
-		// 			alert('success');
-		// 			events = data;
-		// 			refreshCalendar();
-		// 		}
-		// 	});
-		// }
+			var event = {
+				id: calEvent["id"],
+				userId: 1,
+				eventId: 105,
+				title: calEvent.title,
+				start: eventStart,
+				end: eventEnd,	
+				editable: true
+			}
+
+			updateEvent(event, function(data) {
+				refreshCalendar();
+			})
+		}
 
 		function deleteEvent(calEvent, userId) {
-			console.log(calEvent);
-
 			var id = calEvent["id"];
 
-			deleteEventBackend(id, function (data) {
+			deleteEventBackend(id, function(data) {
 				refreshCalendar();
 			})
 		} 
+
+		// function timeOK(start, end) {
+		// 	var startHour = moment(start).hour();
+		// 	var endHour = moment(end).hour();
+		// 	var startMin = moment(start).minute();
+		// 	var endMin = moment(end).minute();
+		// 	var temp = true;
+
+		// 	if(endHour > startHour ) {
+		// 		temp = false;
+		// 	} else if(endHour == startHour) {
+		// 		if( endMin > startMin ) {
+		// 			temp = false;
+		// 		}
+		// 	}
+
+		// 	return temp;
+		// }
 
 		// function resetServer() {
 		// 	$.ajax({
@@ -330,10 +338,6 @@
 					alert(data);
 				}
 			})
-		}
-
-		function hidedp() {
-			$('#datetimepicker3').datetimepicker().hide();
 		}
 
 		function convertToMilitary(string) {
@@ -523,7 +527,7 @@
 	</div>
 
 	<!-- https://www.w3schools.com/bootstrap/bootstrap_modal.asp -->
-	<!-- Modal -->
+	<!-- View/Edit Modal -->
 	<div id="myModal" class="modal fade" role="dialog">
 	  <div class="modal-dialog">
 
@@ -544,5 +548,6 @@
 
 	  </div>
 	</div>
+
 </bodY>
 </html>
