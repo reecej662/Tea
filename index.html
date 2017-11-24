@@ -68,8 +68,13 @@
 		    					"<br>End Time: " + calEvent.end.format('LLLL');
 		    		$('#message').html(temp);
 		    		$('#myModal').modal().show();
-					document.getElementById('editEventButton').onclick = function() {
+					document.getElementById('edit').onclick = function() {
 						toggleVisibility('editForm');
+						$('#editTitle').attr('value',calEvent.title);
+						$('#editStart').val(calEvent.start.format('h:ss A'));
+						$('#editEnd').val(calEvent.end.format('h:ss A'));
+					};
+					document.getElementById('editEventButton').onclick = function() {
 						editEvent(calEvent, globalUserId);
 					};
 					document.getElementById('delete').onclick = function() {
@@ -197,19 +202,25 @@
 			// console.log(startTime);
 			// console.log(endTime);
 
-			var event = {
-				id: calEvent["id"],
-				userId: 1,
-				eventId: 105,
-				title: eventTitle,
-				start: startTime,
-				end: endTime,	
-				editable: true
+			if(moment(endTime).diff(moment(startTime)) < 0) {
+				alert('Invalid event time(s). Please try again.');
 			}
+			else {
+				toggleVisibility('editForm');
+				var event = {
+					id: calEvent["id"],
+					userId: 1,
+					eventId: 105,
+					title: eventTitle,
+					start: startTime,
+					end: endTime,	
+					editable: true
+				}
 
-			updateEvent(event, function(data) {
-				refreshCalendar();
-			})
+				updateEvent(event, function(data) {
+					refreshCalendar();
+				})
+			}
 		}
 
 		function changeEvent(calEvent, userId) {
@@ -542,7 +553,7 @@
 	      </div>
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-default" data-dismiss="modal" id='delete'>Delete Event</button>
-			<button type="button" class="btn btn-default" data-dismiss="modal" id='edit' onclick="toggleVisibility('editForm')">Edit Event</button>
+			<button type="button" class="btn btn-default" data-dismiss="modal" id='edit'>Edit Event</button>
 	      </div>
 	    </div>
 
