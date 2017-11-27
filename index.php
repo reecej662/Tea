@@ -49,6 +49,7 @@
 			toggleVisibility('editForm');
 
 		    $('#calendar').fullCalendar({
+		    	editable: true,
 		    	dayClick: function(date, jsEvent, view) {
 					toggleVisibility('addForm');
 					document.getElementById('addEventButton').onclick = function() {
@@ -63,7 +64,7 @@
 		    					"<br>End Time: " + calEvent.end.format('LLLL');
 		    		$('#message').html(temp);
 		    		$('#myModal').modal().show();
-					document.getElementById('editEventButton').onclick = function() {
+					document.getElementById('edit').onclick = function() {
 						toggleVisibility('editForm');
 						editEvent(calEvent, userId);
 					};
@@ -75,6 +76,21 @@
 				// eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
 				// 	updateEvent(event,userId,delta);
 				// }
+						$('#editTitle').attr('value',calEvent.title);
+						$('#editStart').val(calEvent.start.format('h:ss A'));
+						$('#editEnd').val(calEvent.end.format('h:ss A'));
+					};
+					document.getElementById('editEventButton').onclick = function() {
+						editEvent(calEvent, globalUserId);
+					};
+					document.getElementById('delete').onclick = function() {
+						deleteEvent(calEvent, globalUserId);
+					};
+				},
+
+				eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
+					changeEvent(event,globalUserId);
+				}
 		    })
 
 			getEvents(userId, function (data) {
@@ -106,7 +122,8 @@
 					userId: events[index]["userId"],
 					title: events[index]["title"],
 					start: moment(events[index]["start"]).format(),
-					end: moment(events[index]["end"]).format()
+					end: moment(events[index]["end"]).format(),
+					editable: true
 				})
 			}
 
@@ -120,6 +137,19 @@
 
 			getEvents(userId, function(data) {
 				events = data;
+			});
+		}
+
+		function addEvent(userId, eventTitle, startTime, endTime) {
+			var event = {
+				title: eventTitle,
+				start: startTime,
+				end: endTime,
+				editable: true
+			};
+
+			createEvent(event, function(data) {
+				refreshCalendar();
 			});
 		}
 
@@ -145,8 +175,10 @@
 				eventId: 1,
 				title: eventTitle,
 				start: startTime,
-				end: endTime
+				end: endTime,
+				editable: true
 			}
+
 
 			createEvent(event, function(data) {
 				refreshCalendar();
@@ -160,14 +192,44 @@
 			var date = $.fullCalendar.moment(calEvent.start).format("YYYY-MM-DD")
 			var startTime = moment(date+'T'+start+'-08:00').format("YYYY-MM-DD HH:mm:ss");
 			var endTime = moment(date+'T'+end+'-08:00').format("YYYY-MM-DD HH:mm:ss");
+			// console.log(startTime);
+			// console.log(endTime);
+
+			if(moment(endTime).diff(moment(startTime)) < 0) {
+				alert('Invalid event time(s). Please try again.');
+			}
+			else {
+				toggleVisibility('editForm');
+				var event = {
+					id: calEvent["id"],
+					userId: 1,
+					eventId: 105,
+					title: eventTitle,
+					start: startTime,
+					end: endTime,	
+					editable: true
+				}
+
+				updateEvent(event, function(data) {
+					refreshCalendar();
+				})
+			}
+		}
+
+		function changeEvent(calEvent, userId) {
+			var eventStart = $.fullCalendar.moment(calEvent.start).format('YYYY-MM-DD HH:mm:ss');
+			var eventEnd = $.fullCalendar.moment(calEvent.end).format('YYYY-MM-DD HH:mm:ss');
+			// console.log(eventStart);
+			// console.log(eventEnd);
 
 			var event = {
 				id: calEvent["id"],
-				userId: userId,
-				eventId: 1,
-				title: eventTitle,
-				start: startTime,
-				end: endTime,	
+				userId: 1,
+				eventId: 105,
+				title: calEvent.title,
+				start: eventStart,
+				end: eventEnd,	
+				editable: true
 			}
 
 			updateEvent(event, function(data) {
@@ -176,14 +238,46 @@
 		}
 
 		function deleteEvent(calEvent, userId) {
-			console.log(calEvent);
-
 			var id = calEvent["id"];
 
-			deleteEventBackend(id, function (data) {
+			deleteEventBackend(id, function(data) {
 				refreshCalendar();
 			})
 		} 
+
+		// function timeOK(start, end) {
+		// 	var startHour = moment(start).hour();
+		// 	var endHour = moment(end).hour();
+		// 	var startMin = moment(start).minute();
+		// 	var endMin = moment(end).minute();
+		// 	var temp = true;
+
+		// 	if(endHour > startHour ) {
+		// 		temp = false;
+		// 	} else if(endHour == startHour) {
+		// 		if( endMin > startMin ) {
+		// 			temp = false;
+		// 		}
+		// 	}
+
+		// 	return temp;
+		// }
+
+		// function resetServer() {
+		// 	$.ajax({
+		// 		url: window.location.href + "tea/reset",
+		// 		type: "POST",
+		// 		data: JSON.stringify({
+		// 			userId: globalUserId
+		// 		}),
+		// 		dataType: 'json',
+		// 		contentType: 'application/json',
+		// 		success: function(data) {
+		// 			events = data;
+		// 			refreshCalendar();
+		// 		}
+		// 	});
+		// }
 
 		function testGetAvailable() {
 			var format = 'MMM Do YYYY, h:mm a';
@@ -213,6 +307,45 @@
 
 		function hidedp() {
 			$('#datetimepicker3').datetimepicker().hide();
+		}
+		
+		function testDatabase() {
+			var testObject = {
+				field1: "value1",
+				field2: "value2",
+				object: {
+					val1: "is this working",
+				}
+			}
+			var lab = {
+				name: "174 Lab",
+				ta: "dick",
+				questions: [
+					{
+						title: "How to make design report",
+						student: "hasdf",
+						likes:7
+					},
+					{
+						title: "How to make database",
+						student: "reece",
+						likes:1000
+					}
+				]
+			}
+
+			//databaseRef.
+
+			$.ajax({
+				url: window.location.href + "tea/testDatabase",
+				type: "POST",
+				data: JSON.stringify(lab),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function(data) {
+					alert(data);
+				}
+			})
 		}
 
 		function convertToMilitary(string) {
@@ -405,7 +538,7 @@
 	</div>
 
 	<!-- https://www.w3schools.com/bootstrap/bootstrap_modal.asp -->
-	<!-- Modal -->
+	<!-- View/Edit Modal -->
 	<div id="myModal" class="modal fade" role="dialog">
 	  <div class="modal-dialog">
 
@@ -426,5 +559,6 @@
 
 	  </div>
 	</div>
+
 </bodY>
 </html>

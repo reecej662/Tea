@@ -42,6 +42,8 @@ function deleteEventBackend(id, completion) {
 	$.ajax({
 		url: "http://students.engr.scu.edu/~rjackson/Tea/api/event/delete.php",
 		type: "DELETE",
+		url: "http://104.131.9.190/api/event/delete.php",
+		type: "POST",
 		data: JSON.stringify({
 			id: id
 		}),
@@ -50,7 +52,7 @@ function deleteEventBackend(id, completion) {
 		success: function(data) {
 			completion(data);
 		}
-	})
+	});
 }
 
 function makeEvent(title, startDate, endDate) {
@@ -60,6 +62,7 @@ function makeEvent(title, startDate, endDate) {
 		title: title,
 		start: moment(startDate).format("YYYY-MM-DD HH:mm:ss"),
 		end: moment(endDate).format("YYYY-MM-DD HH:mm:ss"),
+		editable: true
 	};
 
 	return myEvent;
@@ -132,7 +135,8 @@ function makeSampleEvent(title, userId, startDate, endDate) {
 		userId: userId,
 		title: title,
 		start: start,
-		end: end
+		end: end,
+		editable: true
 	};
 
 	return myEvent;
