@@ -2,10 +2,10 @@
 class Database{
  
     // specify your own database credentials
-    private $host = "localhost";
-    private $db_name = "tea";
-    private $username = "root";
-    private $password = "Norman121!";
+    private $host = "dbserver.engr.scu.edu";
+    private $db_name = "sdb_rjackson";
+    private $username = "rjackson";
+    private $password = "00001085987";
     public $conn;
  
     // get the database connection

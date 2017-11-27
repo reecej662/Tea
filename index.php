@@ -1,7 +1,11 @@
 <?php
 	session_start();
 	if(isset($_SESSION['username'])) {
-  		echo "Your session is running " . $_SESSION['username'];
+  		echo $_SESSION['username'];
+	} else {
+		header('location:login.php');
+		exit();
+		die();
 	}
 ?>
 <!DOCTYPE html>
@@ -33,42 +37,14 @@
 
 	<script>
 		var events = [];
-		var auth2;
-		var globalUserId = 1;
+		var userId = <?php echo $_SESSION['id']?>;
+		var username = "<?php echo $_SESSION['username']?>";
 
 		function initClient(callback) {
-		    /*gapi.load('auth2', function(){
-		        /**
-		         * Retrieve the singleton for the GoogleAuth library and set up the
-		         * client.
-		         */
-		        /*auth2 = gapi.auth2.init({
-		            client_id: '619527313666-fo2k03rjj7e8te5qd1ktvtkk718pr28h.apps.googleusercontent.com'
-		        });
-
-		        // Attach the click handler to the sign-in button
-		        //auth2.attachClickHandler('signin-button', {}, onSuccess, onFailure);
-		        callback();
-		    });*/
-
-		    getSchedule("1");
+		    getSchedule(userId);
 		};
 
 		$(document).ready(function() {
-/*		    $('#calendar').fullCalendar({
-		    	dayClick: function(date, jsEvent, view) {
-		    		jasonAddEvent(globalUserId, date.format());
-		    	},
-		    	eventClick: function(calEvent, jsEvent, view) {
-		    		var result = confirm("Do you want to delete " + calEvent.title + "? (Click Cancel to edit event)");
-		    		if (result == true) {
-		    			deleteEvent(calEvent, globalUserId);
-		    		} else {
-		    			editEvent(calEvent, globalUserId);
-		    		}
-				},
-    })*/
-
 		    toggleVisibility('addForm');
 			toggleVisibility('editForm');
 
@@ -77,7 +53,7 @@
 					toggleVisibility('addForm');
 					document.getElementById('addEventButton').onclick = function() {
 						toggleVisibility('addForm');
-						jasonAddEvent(globalUserId, date.format());
+						addEvent(userId, date.format());
 					};
 		    	},
 
@@ -89,43 +65,30 @@
 		    		$('#myModal').modal().show();
 					document.getElementById('editEventButton').onclick = function() {
 						toggleVisibility('editForm');
-						editEvent(calEvent, globalUserId);
+						editEvent(calEvent, userId);
 					};
 					document.getElementById('delete').onclick = function() {
 						// toggleVisibility('editForm');
-						deleteEvent(calEvent, globalUserId);
+						deleteEvent(calEvent, userId);
 					};
 				},
 				// eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
-				// 	updateEvent(event,globalUserId,delta);
+				// 	updateEvent(event,userId,delta);
 				// }
 		    })
 
-			/*initClient(function() {
-				if (auth2.isSignedIn.get()) {
-					var profile = auth2.currentUser.get().getBasicProfile();
-					console.log('ID: ' + profile.getId());
-					console.log('Full Name: ' + profile.getName());
-					console.log('Given Name: ' + profile.getGivenName());
-					console.log('Family Name: ' + profile.getFamilyName());
-					console.log('Image URL: ' + profile.getImageUrl());
-					console.log('Email: ' + profile.getEmail());
-				} else {
-					console.log("User not signed in");
-					//window.location = "http://localhost:8080/login.html";
-				}
-			});*/
-
-			getEvents(1, function (data) {
+			getEvents(userId, function (data) {
 				events = data["events"];
 
-				$('#calendar').fullCalendar('removeEvents');
-				$('#calendar').fullCalendar('renderEvents', events, true);
+				if(events) {
+					$('#calendar').fullCalendar('removeEvents');
+					$('#calendar').fullCalendar('renderEvents', events, true);
+				}
 			})
 		});
 
 		function refreshCalendar() {
-			getEvents(1, function (data) {
+			getEvents(userId, function (data) {
 				console.log("Getting here");
 				events = data["events"];
 
@@ -138,7 +101,6 @@
 			var eventArray = [];
 
 			for(index in events) { 
-
 				eventArray.push({
 					eventId: events[index]["eventId"],
 					userId: events[index]["userId"],
@@ -154,22 +116,10 @@
 
 		function getSchedule(userId) {
 			events = [];
-			globalUserId = userId;
+			userId = userId;
 
 			getEvents(userId, function(data) {
 				events = data;
-			});
-		}
-
-		function addEvent(userId, eventTitle, startTime, endTime) {
-			var event = {
-				title: eventTitle,
-				start: startTime,
-				end: endTime
-			};
-
-			createEvent(event, function(data) {
-				refreshCalendar();
 			});
 		}
 
@@ -183,7 +133,7 @@
    			}		
 		} 
 
-		function jasonAddEvent(userId, date) {
+		function addEvent(userId, date) {
 			var eventTitle = document.getElementById("addTitle").value;
 			var start = convertToMilitary( document.getElementById("addStart").value ); // HH:MM AM/PM format
 			var end = convertToMilitary( document.getElementById("addEnd").value );
@@ -191,8 +141,8 @@
 			var endTime = moment(date+'T'+end+'-08:00').format("YYYY-MM-DD HH:mm:ss");
 
 			var event = {
-				userId: 1,
-				eventId: 105,
+				userId: userId,
+				eventId: 1,
 				title: eventTitle,
 				start: startTime,
 				end: endTime
@@ -208,13 +158,13 @@
 			var start = convertToMilitary( document.getElementById("editStart").value ); // HH:MM AM/PM format
 			var end = convertToMilitary( document.getElementById("editEnd").value );
 			var date = $.fullCalendar.moment(calEvent.start).format("YYYY-MM-DD")
-			var startTime = moment(date+'T'+start+'+00:00').format("YYYY-MM-DD HH:mm:ss");
-			var endTime = moment(date+'T'+end+'+00:00').format("YYYY-MM-DD HH:mm:ss");
+			var startTime = moment(date+'T'+start+'-08:00').format("YYYY-MM-DD HH:mm:ss");
+			var endTime = moment(date+'T'+end+'-08:00').format("YYYY-MM-DD HH:mm:ss");
 
 			var event = {
 				id: calEvent["id"],
-				userId: 1,
-				eventId: 105,
+				userId: userId,
+				eventId: 1,
 				title: eventTitle,
 				start: startTime,
 				end: endTime,	
@@ -224,28 +174,6 @@
 				refreshCalendar();
 			})
 		}
-
-		// function updateEvent(calEvent, userId) {
-		// 	var date = $.fullCalendar.moment(calEvent.start).format("YYYY-MM-DD")
-		// 	var startTime = moment(date+'T'+start+'+00:00');
-		// 	var endTime = moment(date+'T'+end+'+00:00');
-
-		// 	$.ajax({
-		// 		url: window.location.href + "tea/" + userId + "/updateEvent/" + calEvent["id"],
-		// 		type: "POST",
-		// 		data: JSON.stringify({
-		// 			start: startTime,
-		// 			end: endTime,
-		// 		}),
-		// 		dataType: 'json',
-		// 		contentType: 'application/json',
-		// 		success: function(data) {
-		// 			alert('success');
-		// 			events = data;
-		// 			refreshCalendar();
-		// 		}
-		// 	});
-		// }
 
 		function deleteEvent(calEvent, userId) {
 			console.log(calEvent);
@@ -257,22 +185,6 @@
 			})
 		} 
 
-		// function resetServer() {
-		// 	$.ajax({
-		// 		url: window.location.href + "tea/reset",
-		// 		type: "POST",
-		// 		data: JSON.stringify({
-		// 			userId: globalUserId
-		// 		}),
-		// 		dataType: 'json',
-		// 		contentType: 'application/json',
-		// 		success: function(data) {
-		// 			events = data;
-		// 			refreshCalendar();
-		// 		}
-		// 	});
-		// }
-
 		function testGetAvailable() {
 			var format = 'MMM Do YYYY, h:mm a';
 
@@ -280,7 +192,7 @@
 				url: window.location.href + "tea/available",
 				type: "POST",
 				data: JSON.stringify({
-					userId: globalUserId,
+					userId: userId,
 					start: '2017-10-23T19:00:00+07:00',
 					end: '2017-10-23T20:00:00+07:00'
 				}),
@@ -297,45 +209,6 @@
 					$("#availabilityResults").html(availableString);
 				}
 			});
-		}
-
-		function testDatabase() {
-			var testObject = {
-				field1: "value1",
-				field2: "value2",
-				object: {
-					val1: "is this working",
-				}
-			}
-			var lab = {
-				name: "174 Lab",
-				ta: "dick",
-				questions: [
-					{
-						title: "How to make design report",
-						student: "hasdf",
-						likes:7
-					},
-					{
-						title: "How to make database",
-						student: "reece",
-						likes:1000
-					}
-				]
-			}
-
-			//databaseRef.
-
-			$.ajax({
-				url: window.location.href + "tea/testDatabase",
-				type: "POST",
-				data: JSON.stringify(lab),
-				dataType: 'json',
-				contentType: 'application/json',
-				success: function(data) {
-					alert(data);
-				}
-			})
 		}
 
 		function hidedp() {
@@ -406,11 +279,14 @@
 	</style>
 </head>
 <body>
-	<a href="login.html">Logout</a>
+	<a href="available.php">Availability</a>
+	<a href="logout.php">Logout</a>
+	<br><br>
 	<div id='calendar' style='width:50%; height:50%;'></div>
 
 	<!-- Event create stuff -->
 
+	<br><br><br><br><br><br><br><br><br><br><br><br>
 	<div id='addForm'>
 		<p>Please enter your event title:<br></p>
 		<input type="text" name="addTitle" id="addTitle"><br>
@@ -544,7 +420,7 @@
 	      </div>
 	      <div class="modal-footer">
 	        <button type="button" class="btn btn-default" data-dismiss="modal" id='delete'>Delete Event</button>
-			<button type="button" class="btn btn-default" data-dismiss="modal" id='edit' onclick="toggleVisibility('editForm')">Edit Event</button>
+		<button type="button" class="btn btn-default" data-dismiss="modal" id='edit' onclick="toggleVisibility('editForm')">Edit Event</button>
 	      </div>
 	    </div>
 

@@ -1,7 +1,7 @@
 // Event API functions
 function createEvent(event, completion) {	
 	$.ajax({
-		url: "http://104.131.9.190/api/event/create.php",
+		url: "http://students.engr.scu.edu/~rjackson/Tea/api/event/create.php",
 		type: 'POST',
 		data: JSON.stringify(event),
 		dataType: 'json',
@@ -14,7 +14,7 @@ function createEvent(event, completion) {
 
 function getEvents(userId, completion) {
 	$.ajax({
-		url: "http://104.131.9.190/api/event/read.php?userId=" + userId,
+		url: "http://students.engr.scu.edu/~rjackson/Tea/api/event/read.php?userId=" + userId,
 		type: "GET",
 		data: {},
 		dataType: 'json',
@@ -27,7 +27,7 @@ function getEvents(userId, completion) {
 
 function updateEvent(event, completion) {
 	$.ajax({
-		url: "http://104.131.9.190/api/event/update.php",
+		url: "http://students.engr.scu.edu/~rjackson/Tea/api/event/update.php",
 		type: "POST",
 		data: JSON.stringify(event),
 		dataType: 'json',
@@ -40,7 +40,7 @@ function updateEvent(event, completion) {
 
 function deleteEventBackend(id, completion) {
 	$.ajax({
-		url: "http://104.131.9.190/api/event/delete.php",
+		url: "http://students.engr.scu.edu/~rjackson/Tea/api/event/delete.php",
 		type: "DELETE",
 		data: JSON.stringify({
 			id: id
@@ -68,7 +68,7 @@ function makeEvent(title, startDate, endDate) {
 // User API functions
 function createUser(user, completion) {
 	$.ajax({
-		url: "http://104.131.9.190/api/user/create.php",
+		url: "http://students.engr.scu.edu/~rjackson/Tea/api/user/create.php",
 		type: "POST",
 		data: JSON.stringify(user),
 		dataType: 'json',
@@ -81,7 +81,7 @@ function createUser(user, completion) {
 
 function getUser(username, completion) {
 	$.ajax({
-		url: "http://104.131.9.190/api/user/read_one.php?username=" + username,
+		url: "http://students.engr.scu.edu/~rjackson/Tea/api/user/read.php?username=" + username,
 		type: "GET",
 		data: {},
 		dataType: 'json',
@@ -94,7 +94,7 @@ function getUser(username, completion) {
 
 function updateUser(user, completion) {
 	$.ajax({
-		url: "http://104.131.9.190/api/user/update.php",
+		url: "http://students.engr.scu.edu/~rjackson/Tea/api/user/update.php",
 		type: "POST",
 		data: JSON.stringify(user),
 		dataType: 'json',
@@ -107,7 +107,7 @@ function updateUser(user, completion) {
 
 function deleteUser(id, completion) {
 	$.ajax({
-		url: "http://104.131.9.190/api/user/delete.php",
+		url: "http://students.engr.scu.edu/~rjackson/Tea/api/user/delete.php",
 		type: "DELETE",
 		data: JSON.stringify({
 			id: id

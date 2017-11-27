@@ -2,6 +2,9 @@
 	session_start();
 	if(isset($_SESSION['username'])) {
   		echo "Your session is running " . $_SESSION['username'];
+		header("location:index.php");
+		exit();
+		die();
 	}
 ?>
 <!DOCTYPE html>
@@ -72,14 +75,14 @@
 					getUser(username, function(data) {
 						console.log(data);
 						$.ajax({
-							url: "http://104.131.9.190/api/session.php",
+							url: "http://students.engr.scu.edu/~rjackson/Tea/api/session.php",
 							type: "POST",
-							data: JSON.stringify(data),
+							data: JSON.stringify(data['records'][0]),
 							dataType: 'json',
 							contentType: 'application/json',
 							success: function(data) {
-								//completion(data);
 								console.log(data);
+								window.location.replace("available.php");
 							}
 						});
 					})

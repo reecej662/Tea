@@ -29,7 +29,7 @@ if($num>0){
  
     // products array
     $events_arr=array();
-    $events_arr["records"]=array();
+    $events_arr["events"]=array();
  
     // retrieve our table contents
     // fetch() is faster than fetchAll()
