@@ -13,6 +13,7 @@ $db = $database->getConnection();
 
 // initialize object
 $user = new User($db);
+$user->username = isset($_GET['username']) ? $_GET['username'] : die();
 
 // query products
 $stmt = $user->read();
@@ -30,9 +31,9 @@ if($num>0){
 
         $user_item=array(
             "id" => $id,
-            "username" => $username,
             "email" => $email,
-            "firstName" => $firstName,
+            "username" => $user->username,
+	    "firstName" => $firstName,
             "lastName" => $lastName,
             "created" => $created
         );

@@ -1,0 +1,48 @@
+html,body,.container {
+	font-family: Arial;
+	margin: 0;
+}
+
+#buttons {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.container {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	display: table;
+	min-height: 100% !important;
+}
+
+.navbar{
+  background-color: #800000 !important;
+	border-radius: 0px;
+	min-height: 3000px !important;
+	padding-top: 30px;
+}
+
+a, ul{
+	color: black;
+	font-size: 15px;
+	margin-left: 0px;
+	padding-left:0px;
+	text-align: center;
+}
+img {
+	width: 100%;
+}
+span.abcRioButtonContents{
+	font-size:10px !important;
+}
+
+.row.match-my-cols {
+    overflow: hidden;
+		min-height: 100% !important;
+}
+
+.row.match-my-cols [class*="col-"]{
+    margin-bottom: -99999px;
+    padding-bottom: 99999px;
+}

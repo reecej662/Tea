@@ -21,7 +21,7 @@
 		// read events
 		function read(){
 		    // select all query
-		    $query = "SELECT u.id, u.username, u.email, u.firstName, u.lastName, u.created FROM users u ORDER BY u.created DESC";
+		    $query = "SELECT u.id, u.email, u.firstName, u.lastName, u.created FROM users u WHERE u.username = '" . $this->username . "' ORDER BY u.created DESC";
 		 
 		    // prepare query statement
 		    $stmt = $this->conn->prepare($query);
@@ -68,13 +68,13 @@
 		function readOne(){
 		 
 		    // query to read single record
-		    $query = "SELECT u.id, u.username, u.email, u.firstName, u.lastName, u.created FROM users u WHERE u.id = ? LIMIT 0,1";
+		    $query = "SELECT u.id, u.username, u.email, u.firstName, u.lastName, u.created FROM users u WHERE u.username = ? LIMIT 0,1";
 		 
 		    // prepare query statement
 		    $stmt = $this->conn->prepare( $query );
 		 
 		    // bind id of user to be updated
-		    $stmt->bindParam(1, $this->id);
+		    $stmt->bindParam(1, $this->username);
 		 
 		    // execute query
 		    $stmt->execute();

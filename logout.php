@@ -5,6 +5,7 @@ session_start();
 if(isset($_SESSION['username']))
     session_unset();
 
-header("Location: login.php");
+$_SESSION['logout'] = true;
+header("Location: login.php?ref=logout");
 
 ?>

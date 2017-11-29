@@ -28,9 +28,18 @@ $user->lastName = $data->lastName;
  
 // create the user
 if($user->create()){
-    echo '{';
-        echo '"message": "User was created."';
-    echo '}';
+    $user->read();
+    
+    $user_item = array(
+	"id" => $user->id,
+	"username" => $user->username,
+	"email" => $user->email,
+	"firstName" => $user->firstName,
+	"lastName" => $user->lastName,
+	"created" => $user->created
+    );
+
+    echo json_encode($user_item);
 }
  
 // if unable to create the user, tell the user

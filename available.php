@@ -1,8 +1,6 @@
 <?php
 	session_start();
-	if(isset($_SESSION['username'])) {
-  		echo $_SESSION['username'];
-	} else {
+	if(!isset($_SESSION['username'])) {
 		header('location:login.php');
 		exit();
 		die();
@@ -11,7 +9,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<link rel='stylesheet' href='dist/fullcalendar/fullcalendar.css' />
+	<link rel='stylesheet' href='../Tea/dist/fullcalendar/fullcalendar.css' />
 	<script src='dist/lib/jquery/dist/jquery.min.js'></script>
 	<script src='dist/lib/moment/min/moment.min.js'></script>
 	<script src='api/api.js'></script>
@@ -21,266 +19,165 @@
 
 	<!-- Optional theme -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
+	<!--<link rel="stylesheet" href="../Tea/css/style.css">-->
 	<!-- Latest compiled and minified JavaScript -->
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>   
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
-	<script src='dist/fullcalendar/fullcalendar.js'></script>
+	<script src='../Tea/dist/fullcalendar/fullcalendar.js'></script>
 
 	<script src="https://apis.google.com/js/platform.js"></script>
 	<meta name="google-signin-client_id" content="619527313666-fo2k03rjj7e8te5qd1ktvtkk718pr28h.apps.googleusercontent.com">
 
+	<meta charset="utf-8" />
+	<link rel="icon" type="image/png" href="img/logo.png">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<title>TA Emergency Availability</title>
+
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+	<!--     Fonts and icons     -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" />
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" />
+
+	<!-- CSS Files -->
+        <link href="assets/css/bootstrap.min.css" rel="stylesheet" />
+
 	<script>
-		var events = [];
-		var userId = <?php echo $_SESSION['id']?>;
-		var username = "<?php echo $_SESSION['username']?>";
+		function getAvailable() {
+			var start = $('#addStart').val();
+			var end = $('#addEnd').val();
 
-		function initClient(callback) {
-		    getSchedule(userId);
-		};
-
-		$(document).ready(function() {
-			getEvents(userId, function (data) {
-				events = data["events"];
-
-				if(events) {
-					$('#calendar').fullCalendar('removeEvents');
-					$('#calendar').fullCalendar('renderEvents', events, true);
-				}
-			})
-		});
-
-		function refreshCalendar() {
-			getEvents(userId, function (data) {
-				console.log("Getting here");
-				events = data["events"];
-
-				$('#calendar').fullCalendar('removeEvents');
-				$('#calendar').fullCalendar('renderEvents', events, true);
-			});
-		}
-
-		function makeEvents(events) { 
-			var eventArray = [];
-
-			for(index in events) { 
-				eventArray.push({
-					eventId: events[index]["eventId"],
-					userId: events[index]["userId"],
-					title: events[index]["title"],
-					start: moment(events[index]["start"]).format(),
-					end: moment(events[index]["end"]).format()
-				})
-			}
-
-			console.log(eventArray);
-			return eventArray;
-		}
-
-		function getSchedule(userId) {
-			events = [];
-			userId = userId;
-
-			getEvents(userId, function(data) {
-				events = data;
-			});
-		}
-
-		function addEvent(userId, date) {
-			var eventTitle = document.getElementById("addTitle").value;
-			var start = convertToMilitary( document.getElementById("addStart").value ); // HH:MM AM/PM format
-			var end = convertToMilitary( document.getElementById("addEnd").value );
-			var startTime = moment(date+'T'+start+'-08:00').format("YYYY-MM-DD HH:mm:ss");
-			var endTime = moment(date+'T'+end+'-08:00').format("YYYY-MM-DD HH:mm:ss");
-
-			var event = {
-				userId: userId,
-				eventId: 1,
-				title: eventTitle,
-				start: startTime,
-				end: endTime
-			}
-
-			createEvent(event, function(data) {
-				refreshCalendar();
-			});
-		}
-
-		function editEvent(calEvent, userId) {
-			var eventTitle = document.getElementById("editTitle").value;
-			var start = convertToMilitary( document.getElementById("editStart").value ); // HH:MM AM/PM format
-			var end = convertToMilitary( document.getElementById("editEnd").value );
-			var date = $.fullCalendar.moment(calEvent.start).format("YYYY-MM-DD")
-			var startTime = moment(date+'T'+start+'-08:00').format("YYYY-MM-DD HH:mm:ss");
-			var endTime = moment(date+'T'+end+'-08:00').format("YYYY-MM-DD HH:mm:ss");
-
-			var event = {
-				id: calEvent["id"],
-				userId: userId,
-				eventId: 1,
-				title: eventTitle,
-				start: startTime,
-				end: endTime,	
-			}
-
-			updateEvent(event, function(data) {
-				refreshCalendar();
-			})
-		}
-
-		function deleteEvent(calEvent, userId) {
-			console.log(calEvent);
-
-			var id = calEvent["id"];
-
-			deleteEventBackend(id, function (data) {
-				refreshCalendar();
-			})
-		} 
-
-		function testGetAvailable() {
-			var format = 'MMM Do YYYY, h:mm a';
-
-			$.ajax({
-				url: window.location.href + "tea/available",
-				type: "POST",
-				data: JSON.stringify({
-					userId: userId,
-					start: '2017-10-23T19:00:00+07:00',
-					end: '2017-10-23T20:00:00+07:00'
-				}),
-				dataType: 'json',
-				contentType: 'application/json',
-				success: function(data) {
-					var availableString = "";
-					data.forEach(function (item) {
-						var start = $.fullCalendar.moment(item.availabilityStart).utc().format(format);
-						var end = $.fullCalendar.moment(item.availabilityEnd).utc().format(format);
-						availableString += "<br>" + item.userId + " is available from " + start + " to " + end;
-					});
-
-					$("#availabilityResults").html(availableString);
-				}
-			});
-		}
-
-		function hidedp() {
-			$('#datetimepicker3').datetimepicker().hide();
-		}
-
-		function convertToMilitary(string) {
-			var noSpaces = string.replace(/\s/g,'');
-			var size = noSpaces.length;
-			var AMPM = noSpaces.substr(size-2,2);
-			var hours;
-			var minutes;
-			var hoursStr;
-			if (AMPM == 'PM') {
-				if (size == 7 ) {
-					hours = Number(noSpaces.substr(0,2));
-					minutes = noSpaces.substr(3,2);
-					if( hours != 12 )
-						hours += 12;
-					hoursStr = hours.toString()
-				} else {
-					hours = Number(noSpaces.charAt(0));
-					minutes = noSpaces.substr(2,2);
-					hours += 12;
-					hoursStr = hours.toString();
-				}
-			} else {
-				if (size == 7 ) {
-					hours = Number(noSpaces.substr(0,2));
-					minutes = noSpaces.substr(3,2);
-					if( hours == 12 ) {
-						hoursStr = '00';
-					} else {
-						hoursStr = hours.toString()
+			available(start, end, function(data) {
+				
+				tableString = "<thead><tr><td>Name</td><td>Email</td></tr></thead><tbody>";	
+			
+				for(index in data) {
+					var person = data[index];
+					if(person['id'] != <?php echo $_SESSION['id']?>){
+						tableString += '<tr><td>' + person['firstName'] + " " + person['lastName'] + '</td><td>' + person['email'] + '</td></tr>'
 					}
-				} else {
-					hours = Number(noSpaces.charAt(0));
-					minutes = noSpaces.substr(2,2);
-					hoursStr = '0' + hours.toString();
 				}
-			}
 
-			return hoursStr + ':' + minutes;
+				tableString += "</tbody>";
+
+				$('#resultLable').removeAttr("hidden");
+				$('#result').html(tableString);
+			});
 		}
-
-		function testConvertToMilitary() {
-			var test1 = convertToMilitary('3:23 AM');
-			var test2 = convertToMilitary('2:43 PM');
-			var test3 = convertToMilitary('12:00 AM');
-			var test4 = convertToMilitary('12:29 PM');
-
-			$('#test1').html(test1);
-			$('#test2').html(test2);
-			$('#test3').html(test3);
-			$('#test4').html(test4);
-		}
-
-		function fakeAvailabilityData() {
-			$('#availabilityResult').html('Jason Capili is available - jcapili@scu.edu<br>Helen Chan is avialable - hchan@scu.edu');
-		}
-
 	</script>
-
-	<style>
-		p {
-			font-family: Arial;
-		}
-
-		body { 
-			padding: 50px;
-		}
-	</style>
 </head>
 <body>
-	<a href="index.php">Calendar</a>
-	<a href="logout.php">Logout</a>
-	<br><br>
+<body style="background-color: #fff">
+	<nav class="navbar navbar-transparent navbar-absolute" style="background-color: #b30739;">
+    		<div class="container">
+        	        <div class="navbar-header">
+        			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example">
+				    <span class="sr-only">Toggle navigation</span>
+				    <span class="icon-bar"></span>
+				    <span class="icon-bar"></span>
+				    <span class="icon-bar"></span>
+				</button>
+        		<a class="navbar-brand" style="color:white;" href="index.php">Find Available TAs</a>
+        	</div>
 
-	<!-- Event create stuff -->
+        	<div class="collapse navbar-collapse" id="navigation-example">
+        		<ul class="nav navbar-nav navbar-right">
+				<li>
+					<a style="color:white;" href="http://students.engr.scu.edu/~rjackson/Tea/index.php">
+						Home
+					</a>
+				</li>	
+    				<li>
+					<a style="color:white;" href="">
+						Find Available
+					</a>
+    				</li>
+				<li>
+    					<a style="color:white;" href="http://students.engr.scu.edu/~rjackson/Tea/calendar.php">
+    						Calendar
+    					</a>
+    				</li>
+    				<li>
+    					<a style="color:white;" href="http://students.engr.scu.edu/~rjackson/Tea/logout.php">Logout <?php echo $_SESSION['username'];?></a>
+        			</li>
+			</ul>
+        	</div>
+    	</div>
+    </nav>
 
-	<div id='availableForm'>
-		<p>Please enter a start time:</p>
-		<div class="container">
-	    <div class="row">
-	        <div class='col-sm-6'>
-	            <div class="form-group">
-	                <div class='input-group date' id='datetimepicker1'>
-	                    <input type='text' class="form-control" id='addStart'/>
-	                    <span class="input-group-addon">
-	                        <span class="glyphicon glyphicon-time"></span>
-	                    </span>
-	                </div>
-	            </div>
-	        </div>
-	        <script type="text/javascript">
-	            $(function () {
-	                $('#datetimepicker1').datetimepicker();
-	            });
-	        </script>
-	    </div>
-	</div>
+	<style>
+		.space { 
+			margin-top: 20px;
+		}
 
-		<p>Please enter an end time:</p>
+		.left {
+			float: left;
+		}
 
-		<div class="container">
-	    <div class="row">
-	        <div class='col-sm-6'>
-	            <div class="form-group">
-	                <div class='input-group date' id='datetimepicker2'>
-	                    <input type='text' class="form-control" id='addEnd'/>
-	                    <span class="input-group-addon">
-	                        <span class="glyphicon glyphicon-time"></span>
-	                    </span>
-	                </div>
+		.right {
+			float: right;
+		}
+		.row {
+			height: 43px;
+		}
+	</style>
+	<div class="container">
+		<div class="row" style="height:60px;">
+			<div class="col-sm-3">
+				<h3>Search by Lab Time</h3>
+				<!--<p>Select the clock icon to the right of the forms below to select lab date and times</p>-->
+			</div>
+			<div id="resultLable" hidden=true class="col-sm-9">
+				<h3>Results</h3>
+			</div>
+		</div>
+		<div class="row">
+			<div class='col-sm-3'>
+				<div class="container">
+					<p style="margin-top: 10px;">Enter the lab start time:</p>
+				</div>
+			</div>
+	        	<div class='col-sm-9 right' style="position: relative;">
+				<table class="table table-striped" id="result"></table>
+			</div>
+			
+	        	<script type="text/javascript">
+	            		$(function () {
+	                		$('#datetimepicker1').datetimepicker();
+	            		});
+	        	</script>
+		</div>
+		<div class="row">	
+			<div class='col-sm-3'>
+	            		<div class='input-group date' id='datetimepicker1'>
+	                		<input type='text' class="form-control" id='addStart'/>
+	                		<span class="input-group-addon">
+	                    			<span class="glyphicon glyphicon-time"></span>
+	                		</span>
+	            		</div>
+	        	</div>
+		</div>
+		<div class="row space">
+			<div class='col-sm-3'>
+				<div class="container">
+					<p style="margin-top: 10px;">Enter the lab end time:</p>
+				</div>
+	   		</div>
+	   	</div>
+	   	<div class="row">
+	        <div class='col-sm-3'>
+	            <div class='input-group date' id='datetimepicker2'>
+	                <input type='text' class="form-control" id='addEnd'/>
+	                <span class="input-group-addon">
+	                    <span class="glyphicon glyphicon-time"></span>
+	                </span>
 	            </div>
 	        </div>
 	        <script type="text/javascript">
@@ -288,21 +185,12 @@
 	                $('#datetimepicker2').datetimepicker();
 	            });
 	        </script>
-	    </div>
-	</div>
-
-		<div>
-		<button id='availabilityButton' onclick='fakeAvailabilityData()'>Submit</button>
 		</div>
-
+		<div class="row space">
+			<div class="col-sm-3" style="padding-left: 30px;">
+				<button id='availabilityButton' class="btn btn-primary btn-lrg" style="background-color:#b30738" onclick='getAvailable()'>Search</button>
+			</div>
+		</div>
 	</div>
-
-
-	<br><br>
-	<p id="availabilityResult">
-	</p>
-
-	<!-- https://www.w3schools.com/bootstrap/bootstrap_modal.asp -->
-	<!-- Modal -->
-</bodY>
+</body>
 </html>

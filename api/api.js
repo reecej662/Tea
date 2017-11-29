@@ -41,8 +41,6 @@ function updateEvent(event, completion) {
 function deleteEventBackend(id, completion) {
 	$.ajax({
 		url: "http://students.engr.scu.edu/~rjackson/Tea/api/event/delete.php",
-		type: "DELETE",
-		url: "http://104.131.9.190/api/event/delete.php",
 		type: "POST",
 		data: JSON.stringify({
 			id: id
@@ -142,24 +140,22 @@ function makeSampleEvent(title, userId, startDate, endDate) {
 	return myEvent;
 }
 
-function available(start, end, completion) {
-	// ajax some stuff to get the data from the backend
-	// Response format will be
-	//
-	var phpResponse = {
-		users: [rjackson, example]
-	}
+function available(startDate, endDate, completion) {
+	var start = moment(startDate).format("YYYY-MM-DD HH:mm:ss");
+	var end = moment(endDate).format("YYYY-MM-DD HH:mm:ss");
 
-	var users = [];
-
-	for(username in phpResponse) {
-		getUser(username, function(data) {
-			users.push(data["user"]);
-		})
-	}
-
-	completion(users);
+	$.ajax({
+		url: encodeURI("http://students.engr.scu.edu/~rjackson/Tea/api/available.php?start=" + start + "&end=" + end),
+		type: "GET",
+		data: {},
+		dataType: 'json',
+		contentType: 'application/json',
+		success: function(data) {
+			completion(data);
+		}
+	})
 }
+
 
 function makeSampleEvents() {
 	return [

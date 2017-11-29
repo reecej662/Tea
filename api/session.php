@@ -14,6 +14,8 @@
         $_SESSION['firstName']=$data->firstName;
         $_SESSION['lastName']=$data->lastName;
 
-        echo 'Session created';
+        echo json_encode(
+		array("message" => 'Session created')
+	);
 ?>
 
