@@ -67,7 +67,7 @@
 	<script>
 		var logout = <?php 
 			if(isset($_GET['ref'])){  
-				if($_GET['ref'] == "logout"){
+				if($_GET['ref'] == "logout" && !isset($_SESSION['username'])){
 					echo "true";
 				} else {
 					echo "false";
@@ -215,7 +215,7 @@
 								</div>
 								<p class="text-divider">Login with your SCU Email</p>
 								<div class="content">
-									<div class="btn btn-simple btn-primary btn-lg g-signin2" data-onsuccess="onSignIn"></div>
+									<div class="btn btn-simple btn-primary btn-lg g-signin2" data-onsuccess="onSignIn" data-prompt="select_account"></div>
 								</div>
 							</form>
 						</div>

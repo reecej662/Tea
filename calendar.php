@@ -48,12 +48,32 @@
 
 	<script>
 		var events = [];
-		var userId = <?php echo $_SESSION['id']?>;
+		var userId = "<?php echo $_SESSION['id']?>";
 		var username = "<?php echo $_SESSION['username']?>";
+
+		if(userId == "") {
+			getUser(username, function(data) {
+				userId = data["records"][0]["id"];
+				createSession(data["records"][0]);
+			});
+		}
 
 		function initClient(callback) {
 		    getSchedule(userId);
 		};
+
+                function createSession(data) {
+                        $.ajax({
+                                url: "http://students.engr.scu.edu/~rjackson/Tea/api/session.php",
+                                type: "POST",
+                                data: JSON.stringify(data),
+                                dataType: 'json',
+                                contentType: 'application/json',
+                                success: function(data) {
+                                        console.log(data);
+                                }
+                        });
+                }
 
 		$(document).ready(function() {
 		    toggleVisibility('addForm');
@@ -75,18 +95,25 @@
 		    					"<br>End Time: " + calEvent.end.format('LLLL');
 		    		$('#message').html(temp);
 		    		$('#myModal').modal().show();
-					document.getElementById('edit').onclick = function() {
-						toggleVisibility('editForm');
-						editEvent(calEvent, userId);
-					};
-					document.getElementById('delete').onclick = function() {
-						// toggleVisibility('editForm');
-						deleteEvent(calEvent, userId);
-					};
+				
+				document.getElementById('edit').onclick = function() {
+					toggleVisibility('editForm');
+					$('#editTitle').attr('value', calEvent.title);
+					$('#editStart').val(calEvent.start.format('h:ss A'));
+					$('#editEnd').val(calEvent.end.format('h:ss A'));
+				};
+
+				document.getElementById('editEventButton').onclick = function() {
+					editEvent(calEvent, userId);	
+				};
+
+				document.getElementById('delete').onclick = function() {
+					deleteEvent(calEvent, userId);
+				};
 			},
 
 			eventDrop: function(event, delta, revertFunc, jsView, ui, view ) {
-				changeEvent(event,globalUserId);
+				changeEvent(event, userId);
 			}
 		    });
 
@@ -214,6 +241,9 @@
 		function changeEvent(calEvent, userId) {
 			var eventStart = $.fullCalendar.moment(calEvent.start).format('YYYY-MM-DD HH:mm:ss');
 			var eventEnd = $.fullCalendar.moment(calEvent.end).format('YYYY-MM-DD HH:mm:ss');
+
+			console.log(calEvent.start);
+			console.log(calEvent.end);
 
 			var event = {
 				id: calEvent["id"],

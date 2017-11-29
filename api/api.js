@@ -13,16 +13,18 @@ function createEvent(event, completion) {
 }
 
 function getEvents(userId, completion) {
-	$.ajax({
-		url: "http://students.engr.scu.edu/~rjackson/Tea/api/event/read.php?userId=" + userId,
-		type: "GET",
-		data: {},
-		dataType: 'json',
-		contentType: 'application/json',
-		success: function(data) {
-			completion(data);
-		}
-	});
+	if(userId != "") {
+		$.ajax({
+			url: "http://students.engr.scu.edu/~rjackson/Tea/api/event/read.php?userId=" + userId,
+			type: "GET",
+			data: {},
+			dataType: 'json',
+			contentType: 'application/json',
+			success: function(data) {
+				completion(data);
+			}
+		});
+	}
 }
 
 function updateEvent(event, completion) {
